@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DaAk — Bathroom Log</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ocean: #1a6b8a;
+    --ocean-light: #2a8aad;
+    --ocean-pale: #e8f4f8;
+    --sand: #f5f0e8;
+    --coral: #e07a5f;
+    --green: #3d9970;
+    --yellow: #f4a261;
+    --text: #1a2a35;
+    --muted: #6b8a99;
+    --white: #ffffff;
+    --border: #ccdde6;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--sand);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px 0;
+  }
+
+  header {
+    background: var(--ocean);
+    color: var(--white);
+    padding: 20px 24px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(26,107,138,0.3);
+  }
+
+  header h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  header p {
+    font-size: 0.8rem;
+    opacity: 0.75;
+    margin-top: 2px;
+  }
+
+  .tabs {
+    display: flex;
+    background: var(--ocean);
+    padding: 0 24px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .tab {
+    padding: 10px 16px;
+    color: rgba(255,255,255,0.65);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .tab.active {
+    color: var(--white);
+    border-bottom-color: var(--white);
+  }
+
+  .view { display: none; padding: 20px 20px; }
+  .view.active { display: block; }
+
+  /* TIMER SECTION */
+  .timer-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(26,107,138,0.08);
+    border: 1px solid var(--border);
+  }
+
+  .timer-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .timer-display {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--ocean);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .timer-display.running { color: var(--coral); }
+  .timer-display.stopped { color: var(--green); }
+
+  .timer-btns { display: flex; gap: 10px; justify-content: center; }
+
+  .btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-primary { background: var(--ocean); color: white; }
+  .btn-primary:hover { background: var(--ocean-light); }
+  .btn-danger { background: var(--coral); color: white; }
+  .btn-danger:hover { opacity: 0.9; }
+  .btn-success { background: var(--green); color: white; }
+  .btn-success:hover { opacity: 0.9; }
+  .btn-muted { background: var(--border); color: var(--text); }
+  .btn-muted:hover { background: #b8cdd8; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* FORM */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(26,107,138,0.06);
+    border: 1px solid var(--border);
+  }
+
+  .card-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: var(--white);
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--ocean);
+  }
+
+  textarea { resize: vertical; min-height: 72px; }
+
+  .reg-scale {
+    display: flex;
+    gap: 8px;
+  }
+
+  .reg-btn {
+    flex: 1;
+    padding: 10px 4px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--white);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    color: var(--muted);
+  }
+
+  .reg-btn.selected-1 { background: #d4edda; border-color: #3d9970; color: #2d7a56; }
+  .reg-btn.selected-2 { background: #d4edda; border-color: #3d9970; color: #2d7a56; }
+  .reg-btn.selected-3 { background: #fff3cd; border-color: #f4a261; color: #c07a30; }
+  .reg-btn.selected-4 { background: #ffe0d6; border-color: #e07a5f; color: #b85a3f; }
+  .reg-btn.selected-5 { background: #ffd6cc; border-color: #cc4444; color: #993333; }
+
+  .reg-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .prompt-row {
+    background: var(--ocean-pale);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .prompt-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .prompt-num {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--ocean);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .remove-btn {
+    background: none;
+    border: none;
+    color: var(--coral);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .add-prompt-btn {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ocean);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 4px;
+  }
+
+  .add-prompt-btn:hover { border-color: var(--ocean); background: var(--ocean-pale); }
+
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--ocean);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.15s;
+    letter-spacing: 0.02em;
+  }
+
+  .submit-btn:hover { background: var(--ocean-light); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* DASHBOARD */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 6px rgba(26,107,138,0.06);
+  }
+
+  .stat-num {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--ocean);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  .log-entry {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(26,107,138,0.05);
+  }
+
+  .log-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .log-date { font-weight: 700; font-size: 0.9rem; }
+  .log-duration {
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--ocean-pale);
+    color: var(--ocean);
+  }
+
+  .log-duration.long { background: #ffe0d6; color: var(--coral); }
+
+  .log-detail {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+
+  .log-detail strong { color: var(--text); }
+
+  .outcome-chip {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-top: 6px;
+  }
+
+  .outcome-independent { background: #d4edda; color: #2d7a56; }
+  .outcome-prompts { background: #fff3cd; color: #c07a30; }
+  .outcome-redirect { background: #ffe0d6; color: #b85a3f; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--green);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: transform 0.3s ease;
+    z-index: 999;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--coral); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 0.9rem; }
+
+  .section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 12px;
+    margin-top: 4px;
+  }
+
+  select option { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🚿 DaAk — Bathroom Log</h1>
+  <p>Track bathroom duration, prompts & patterns</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('log')">Log Entry</div>
+  <div class="tab" onclick="switchTab('history')">History</div>
+  <div class="tab" onclick="switchTab('patterns')">Patterns</div>
+</div>
+
+<!-- LOG ENTRY VIEW -->
+<div class="view active" id="view-log">
+
+  <!-- TIMER -->
+  <div class="timer-card">
+    <div class="timer-label">Time in Bathroom</div>
+    <div class="timer-display" id="timerDisplay">00:00</div>
+    <div class="timer-btns">
+      <button class="btn btn-primary" id="btnStart" onclick="startTimer()">▶ Start</button>
+      <button class="btn btn-danger" id="btnStop" onclick="stopTimer()" disabled>■ Stop</button>
+      <button class="btn btn-muted" id="btnReset" onclick="resetTimer()">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- BASIC INFO -->
+  <div class="card">
+    <div class="card-title">Basic Info</div>
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="date">
+    </div>
+    <div class="field">
+      <label>Time Entered Bathroom</label>
+      <input type="time" id="timeIn">
+    </div>
+    <div class="field">
+      <label>Time Exited Bathroom</label>
+      <input type="time" id="timeOut">
+    </div>
+    <div class="field">
+      <label>Staff on Shift</label>
+      <select id="staff">
+        <option value="">Select staff</option>
+        <option>Sammi</option>
+        <option>Ann</option>
+        <option>Katie</option>
+        <option>Anthony</option>
+        <option>Other</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- REGULATION -->
+  <div class="card">
+    <div class="card-title">Regulation Going In</div>
+    <div class="field">
+      <label>DaAk's regulation level before entering bathroom</label>
+      <div class="reg-scale" id="regScale">
+        <div class="reg-btn" onclick="selectReg(1)">1<br><span style="font-size:0.65rem;font-weight:400">Calm</span></div>
+        <div class="reg-btn" onclick="selectReg(2)">2<br><span style="font-size:0.65rem;font-weight:400">Regulated</span></div>
+        <div class="reg-btn" onclick="selectReg(3)">3<br><span style="font-size:0.65rem;font-weight:400">Neutral</span></div>
+        <div class="reg-btn" onclick="selectReg(4)">4<br><span style="font-size:0.65rem;font-weight:400">Elevated</span></div>
+        <div class="reg-btn" onclick="selectReg(5)">5<br><span style="font-size:0.65rem;font-weight:400">Crisis</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>What happened right before he went in?</label>
+      <select id="antecedent">
+        <option value="">Select antecedent</option>
+        <option>Woke up / natural morning routine</option>
+        <option>Transition from another activity</option>
+        <option>Staff arrived / shift change</option>
+        <option>Demand placed before bathroom</option>
+        <option>Unprompted — went on own</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Antecedent notes (optional)</label>
+      <textarea id="antecedentNotes" placeholder="Any extra context about what was happening before..."></textarea>
+    </div>
+  </div>
+
+  <!-- PROMPTS -->
+  <div class="card">
+    <div class="card-title">Staff Prompts</div>
+    <div id="promptsList"></div>
+    <button class="add-prompt-btn" onclick="addPrompt()">+ Add Prompt Attempt</button>
+  </div>
+
+  <!-- OUTCOME -->
+  <div class="card">
+    <div class="card-title">How Did It End?</div>
+    <div class="field">
+      <label>How did DaAk exit?</label>
+      <select id="outcome">
+        <option value="">Select outcome</option>
+        <option>Came out independently</option>
+        <option>Came out after verbal prompts</option>
+        <option>Came out after visual support used</option>
+        <option>Needed physical redirect</option>
+        <option>Still elevated when he came out</option>
+        <option>Regulated when he came out</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>DaAk's regulation level coming out (1–5)</label>
+      <div class="reg-scale" id="regScaleOut">
+        <div class="reg-btn" onclick="selectRegOut(1)">1<br><span style="font-size:0.65rem;font-weight:400">Calm</span></div>
+        <div class="reg-btn" onclick="selectRegOut(2)">2<br><span style="font-size:0.65rem;font-weight:400">Regulated</span></div>
+        <div class="reg-btn" onclick="selectRegOut(3)">3<br><span style="font-size:0.65rem;font-weight:400">Neutral</span></div>
+        <div class="reg-btn" onclick="selectRegOut(4)">4<br><span style="font-size:0.65rem;font-weight:400">Elevated</span></div>
+        <div class="reg-btn" onclick="selectRegOut(5)">5<br><span style="font-size:0.65rem;font-weight:400">Crisis</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>What worked? What didn't?</label>
+      <textarea id="notes" placeholder="Anything useful for the team to know..."></textarea>
+    </div>
+  </div>
+
+  <button class="submit-btn" id="submitBtn" onclick="submitEntry()">Submit to Google Sheets</button>
+</div>
+
+<!-- HISTORY VIEW -->
+<div class="view" id="view-history">
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-num" id="statTotal">—</div><div class="stat-label">Total Logged</div></div>
+    <div class="stat-card"><div class="stat-num" id="statAvgDur">—</div><div class="stat-label">Avg Duration</div></div>
+    <div class="stat-card"><div class="stat-num" id="statLongest">—</div><div class="stat-label">Longest</div></div>
+    <div class="stat-card"><div class="stat-num" id="statAvgPrompts">—</div><div class="stat-label">Avg Prompts</div></div>
+  </div>
+  <div class="section-title">Recent Entries</div>
+  <div id="historyList"><div class="empty-state"><div class="icon">🚿</div><p>No entries yet. Log the first bathroom visit above.</p></div></div>
+</div>
+
+<!-- PATTERNS VIEW -->
+<div class="view" id="view-patterns">
+  <div class="card">
+    <div class="card-title">Regulation In vs. Duration</div>
+    <div id="regChart" style="min-height:120px;display:flex;align-items:flex-end;gap:8px;padding:8px 0;"></div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;">Each bar = one entry. Height = duration. Color = regulation level going in.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Who Prompted & What They Said</div>
+    <div id="promptPatterns"><div class="empty-state"><div class="icon">💬</div><p>Log some entries to see prompt patterns.</p></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">DaAk's Responses to Prompts</div>
+    <div id="responsePatterns"><div class="empty-state"><div class="icon">📊</div><p>Log some entries to see response patterns.</p></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const SHEET_ID = '16AcwX2bgHpd4eYgphIVhwBmZ5XoLg2RIKkebVobPYvQ';
+const SHEET_NAME = '🚿 Bathroom Log';
+
+let timerInterval = null;
+let timerSeconds = 0;
+let timerRunning = false;
+let timerStartTime = null;
+let timerEndTime = null;
+
+let selectedReg = null;
+let selectedRegOut = null;
+let promptCount = 0;
+let entries = JSON.parse(localStorage.getItem('bathroomEntries') || '[]');
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date();
+  document.getElementById('date').value = today.toISOString().split('T')[0];
+  const now = `${String(today.getHours()).padStart(2,'0')}:${String(today.getMinutes()).padStart(2,'0')}`;
+  document.getElementById('timeIn').value = now;
+  renderHistory();
+  renderPatterns();
+});
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['log','history','patterns'][i] === tab);
+  });
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + tab).classList.add('active');
+  if (tab === 'history') renderHistory();
+  if (tab === 'patterns') renderPatterns();
+}
+
+// ── Timer ──────────────────────────────────────────────────────────────────
+function startTimer() {
+  if (timerRunning) return;
+  timerRunning = true;
+  timerStartTime = new Date();
+  const now = timerStartTime;
+  document.getElementById('timeIn').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  timerInterval = setInterval(() => {
+    timerSeconds++;
+    updateTimerDisplay();
+  }, 1000);
+  document.getElementById('timerDisplay').className = 'timer-display running';
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnStop').disabled = false;
+}
+
+function stopTimer() {
+  if (!timerRunning) return;
+  timerRunning = false;
+  clearInterval(timerInterval);
+  timerEndTime = new Date();
+  const now = timerEndTime;
+  document.getElementById('timeOut').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  document.getElementById('timerDisplay').className = 'timer-display stopped';
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnStop').disabled = true;
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = 0;
+  timerStartTime = null;
+  timerEndTime = null;
+  updateTimerDisplay();
+  document.getElementById('timerDisplay').className = 'timer-display';
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnStop').disabled = true;
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds / 60);
+  const s = timerSeconds % 60;
+  document.getElementById('timerDisplay').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+// ── Regulation Scale ───────────────────────────────────────────────────────
+function selectReg(val) {
+  selectedReg = val;
+  document.querySelectorAll('#regScale .reg-btn').forEach((b, i) => {
+    b.className = 'reg-btn' + (i + 1 === val ? ` selected-${val}` : '');
+  });
+}
+
+function selectRegOut(val) {
+  selectedRegOut = val;
+  document.querySelectorAll('#regScaleOut .reg-btn').forEach((b, i) => {
+    b.className = 'reg-btn' + (i + 1 === val ? ` selected-${val}` : '');
+  });
+}
+
+// ── Prompts ────────────────────────────────────────────────────────────────
+function addPrompt() {
+  promptCount++;
+  const id = promptCount;
+  const div = document.createElement('div');
+  div.className = 'prompt-row';
+  div.id = `prompt-${id}`;
+  div.innerHTML = `
+    <div class="prompt-row-header">
+      <span class="prompt-num">Prompt #${id}</span>
+      <button class="remove-btn" onclick="removePrompt(${id})">✕</button>
+    </div>
+    <div class="field">
+      <label>Who went in?</label>
+      <select id="promptStaff-${id}">
+        <option value="">Select</option>
+        <option>Sammi</option>
+        <option>Ann</option>
+        <option>Katie</option>
+        <option>Anthony</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>What did they say?</label>
+      <input type="text" id="promptSaid-${id}" placeholder='e.g. "Almost time buddy"'>
+    </div>
+    <div class="field">
+      <label>DaAk's response</label>
+      <select id="promptResponse-${id}">
+        <option value="">Select response</option>
+        <option>Said "one moment one moment" and closed door</option>
+        <option>Shut the lights off</option>
+        <option>Got loud / vocally escalated</option>
+        <option>No response</option>
+        <option>Started to come out</option>
+        <option>Came out</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Additional notes on response</label>
+      <input type="text" id="promptNotes-${id}" placeholder="Any extra detail...">
+    </div>
+  `;
+  document.getElementById('promptsList').appendChild(div);
+}
+
+function removePrompt(id) {
+  const el = document.getElementById(`prompt-${id}`);
+  if (el) el.remove();
+}
+
+function getPrompts() {
+  const prompts = [];
+  document.querySelectorAll('.prompt-row').forEach(row => {
+    const id = row.id.split('-')[1];
+    prompts.push({
+      staff: document.getElementById(`promptStaff-${id}`)?.value || '',
+      said: document.getElementById(`promptSaid-${id}`)?.value || '',
+      response: document.getElementById(`promptResponse-${id}`)?.value || '',
+      notes: document.getElementById(`promptNotes-${id}`)?.value || ''
+    });
+  });
+  return prompts;
+}
+
+// ── Duration calc ──────────────────────────────────────────────────────────
+function calcDuration(timeIn, timeOut) {
+  if (!timeIn || !timeOut) return null;
+  const [h1, m1] = timeIn.split(':').map(Number);
+  const [h2, m2] = timeOut.split(':').map(Number);
+  const mins = (h2 * 60 + m2) - (h1 * 60 + m1);
+  return mins > 0 ? mins : null;
+}
+
+function formatDuration(mins) {
+  if (!mins) return '—';
+  if (mins >= 60) return `${Math.floor(mins/60)}h ${mins%60}m`;
+  return `${mins}m`;
+}
+
+// ── Submit ─────────────────────────────────────────────────────────────────
+async function submitEntry() {
+  const date = document.getElementById('date').value;
+  const timeIn = document.getElementById('timeIn').value;
+  const timeOut = document.getElementById('timeOut').value;
+  const staff = document.getElementById('staff').value;
+  const antecedent = document.getElementById('antecedent').value;
+  const antecedentNotes = document.getElementById('antecedentNotes').value;
+  const outcome = document.getElementById('outcome').value;
+  const notes = document.getElementById('notes').value;
+  const prompts = getPrompts();
+  const duration = calcDuration(timeIn, timeOut);
+
+  if (!date || !timeIn || !staff) {
+    showToast('Please fill in date, time in, and staff.', true);
+    return;
+  }
+
+  const promptSummary = prompts.map((p, i) =>
+    `[${i+1}] ${p.staff}: "${p.said}" → ${p.response}${p.notes ? ` (${p.notes})` : ''}`
+  ).join(' | ');
+
+  const entry = {
+    timestamp: new Date().toLocaleString(),
+    date,
+    timeIn,
+    timeOut: timeOut || '',
+    durationMins: duration || '',
+    staff,
+    regIn: selectedReg || '',
+    antecedent,
+    antecedentNotes,
+    totalPrompts: prompts.length,
+    promptDetails: promptSummary,
+    regOut: selectedRegOut || '',
+    outcome,
+    notes
+  };
+
+  // Save locally
+  entries.unshift(entry);
+  localStorage.setItem('bathroomEntries', JSON.stringify(entries));
+
+  // Submit to Google Sheets
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  try {
+    const row = [
+      entry.timestamp, entry.date, entry.timeIn, entry.timeOut,
+      entry.durationMins, entry.staff, entry.regIn, entry.antecedent,
+      entry.antecedentNotes, entry.totalPrompts, entry.promptDetails,
+      entry.regOut, entry.outcome, entry.notes
+    ];
+
+    const scriptUrl = document.getElementById('scriptUrl')?.value;
+    if (scriptUrl) {
+      await fetch(scriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sheetName: SHEET_NAME, row })
+      });
+    }
+
+    showToast('✓ Logged successfully!');
+    resetForm();
+  } catch (e) {
+    showToast('Saved locally. Check Apps Script URL.', true);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Submit to Google Sheets';
+}
+
+function resetForm() {
+  const today = new Date();
+  document.getElementById('date').value = today.toISOString().split('T')[0];
+  document.getElementById('timeIn').value = '';
+  document.getElementById('timeOut').value = '';
+  document.getElementById('staff').value = '';
+  document.getElementById('antecedent').value = '';
+  document.getElementById('antecedentNotes').value = '';
+  document.getElementById('outcome').value = '';
+  document.getElementById('notes').value = '';
+  document.getElementById('promptsList').innerHTML = '';
+  promptCount = 0;
+  selectedReg = null;
+  selectedRegOut = null;
+  document.querySelectorAll('.reg-btn').forEach(b => b.className = 'reg-btn');
+  resetTimer();
+}
+
+// ── History ────────────────────────────────────────────────────────────────
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!entries.length) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">🚿</div><p>No entries yet.</p></div>';
+    return;
+  }
+
+  const total = entries.length;
+  const durations = entries.map(e => Number(e.durationMins)).filter(Boolean);
+  const avgDur = durations.length ? Math.round(durations.reduce((a,b)=>a+b,0)/durations.length) : null;
+  const longest = durations.length ? Math.max(...durations) : null;
+  const prompts = entries.map(e => Number(e.totalPrompts)).filter(v => !isNaN(v));
+  const avgPrompts = prompts.length ? (prompts.reduce((a,b)=>a+b,0)/prompts.length).toFixed(1) : '—';
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statAvgDur').textContent = avgDur ? formatDuration(avgDur) : '—';
+  document.getElementById('statLongest').textContent = longest ? formatDuration(longest) : '—';
+  document.getElementById('statAvgPrompts').textContent = avgPrompts;
+
+  list.innerHTML = entries.slice(0, 20).map(e => {
+    const dur = Number(e.durationMins);
+    const isLong = dur >= 60;
+    const outcomeClass = e.outcome?.includes('independently') ? 'outcome-independent'
+      : e.outcome?.includes('redirect') ? 'outcome-redirect' : 'outcome-prompts';
+
+    return `
+      <div class="log-entry">
+        <div class="log-entry-header">
+          <div class="log-date">${e.date} · ${e.timeIn || '—'}</div>
+          <div class="log-duration${isLong ? ' long' : ''}">${formatDuration(dur)}</div>
+        </div>
+        <div class="log-detail"><strong>Staff:</strong> ${e.staff || '—'} &nbsp;·&nbsp; <strong>Reg in:</strong> ${e.regIn || '—'} &nbsp;·&nbsp; <strong>Reg out:</strong> ${e.regOut || '—'}</div>
+        <div class="log-detail"><strong>Prompts:</strong> ${e.totalPrompts || 0}</div>
+        ${e.antecedent ? `<div class="log-detail"><strong>Before:</strong> ${e.antecedent}</div>` : ''}
+        ${e.promptDetails ? `<div class="log-detail"><strong>Prompts:</strong> ${e.promptDetails}</div>` : ''}
+        ${e.outcome ? `<span class="outcome-chip ${outcomeClass}">${e.outcome}</span>` : ''}
+        ${e.notes ? `<div class="log-detail" style="margin-top:6px;font-style:italic;">${e.notes}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Patterns ───────────────────────────────────────────────────────────────
+function renderPatterns() {
+  // Reg chart
+  const chart = document.getElementById('regChart');
+  if (!entries.length) {
+    chart.innerHTML = '<div class="empty-state" style="width:100%;"><p>No data yet.</p></div>';
+  } else {
+    const recent = entries.slice(0, 30).reverse();
+    const maxDur = Math.max(...recent.map(e => Number(e.durationMins) || 0), 1);
+    const colors = ['','#3d9970','#7bc67e','#f4a261','#e07a5f','#cc4444'];
+    chart.innerHTML = recent.map(e => {
+      const dur = Number(e.durationMins) || 0;
+      const h = Math.max(8, Math.round((dur / maxDur) * 100));
+      const reg = Number(e.regIn) || 3;
+      return `<div style="flex:1;min-width:12px;max-width:28px;height:${h}px;background:${colors[reg]};border-radius:3px 3px 0 0;position:relative;" title="${e.date}: ${formatDuration(dur)}, reg in: ${reg}"></div>`;
+    }).join('');
+  }
+
+  // Prompt patterns
+  const pp = document.getElementById('promptPatterns');
+  const allPrompts = entries.flatMap(e => {
+    if (!e.promptDetails) return [];
+    return e.promptDetails.split(' | ').map(p => {
+      const m = p.match(/\] (.+?): "(.+?)" → (.+?)(?:\s\(|$)/);
+      return m ? { staff: m[1], said: m[2], response: m[3] } : null;
+    }).filter(Boolean);
+  });
+
+  if (!allPrompts.length) {
+    pp.innerHTML = '<div class="empty-state"><p>No prompt data yet.</p></div>';
+  } else {
+    const staffCounts = {};
+    allPrompts.forEach(p => { staffCounts[p.staff] = (staffCounts[p.staff] || 0) + 1; });
+    pp.innerHTML = Object.entries(staffCounts).sort((a,b)=>b[1]-a[1]).map(([staff, count]) =>
+      `<div class="log-detail" style="margin-bottom:6px;"><strong>${staff}</strong> — prompted ${count} time${count>1?'s':''}</div>`
+    ).join('');
+  }
+
+  // Response patterns
+  const rp = document.getElementById('responsePatterns');
+  if (!allPrompts.length) {
+    rp.innerHTML = '<div class="empty-state"><p>No response data yet.</p></div>';
+  } else {
+    const respCounts = {};
+    allPrompts.forEach(p => { respCounts[p.response] = (respCounts[p.response] || 0) + 1; });
+    rp.innerHTML = Object.entries(respCounts).sort((a,b)=>b[1]-a[1]).map(([resp, count]) =>
+      `<div class="log-detail" style="margin-bottom:6px;"><strong>"${resp}"</strong> — ${count}x</div>`
+    ).join('');
+  }
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+
+<!-- Hidden field for Apps Script URL - fill this in after setup -->
+<input type="hidden" id="scriptUrl" value="YOUR_APPS_SCRIPT_URL_HERE">
+
+</body>
