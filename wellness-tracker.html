@@ -628,7 +628,7 @@ textarea { resize: vertical; min-height: 70px; }
       </div>
     </div>
     <div class="field">
-      <label>Did he poop yesterday?</label>
+      <label>Did he poop today?</label>
       <div class="yn" id="poopYN">
         <button class="yn-btn" onclick="selectYN('poopYN', this, true)">✅ Yes</button>
         <button class="yn-btn" onclick="selectYN('poopYN', this, false)">❌ No</button>
@@ -643,8 +643,32 @@ textarea { resize: vertical; min-height: 70px; }
       </div>
     </div>
     <div class="field">
-      <label>Supplements taken yesterday? <span>(list what he took)</span></label>
-      <input type="text" id="supplementsText" placeholder="e.g. magnesium, vitamin D, fish oil...">
+      <label>Supplements taken yesterday?</label>
+      <div class="chips" id="suppChipsMorning" style="margin-bottom:8px;">
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Ketotifen</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">5-MTHF</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">NAC</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Xyzal</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Apigenin</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Probiotic</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Saffron</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Lithium</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Atrantil</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">S. Boulardii</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Gluten Ease</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Magnesium</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Luteolin</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Vitamin D3</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Vitamin A</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">L-Theanine</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Quercetin</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Biocide</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Digest Complete</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Pepcid</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Turmeric</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Fever Few</div>
+      </div>
+      <input type="text" id="supplementsOtherMorning" placeholder="Other supplements (optional)..." style="margin-top:4px;">
     </div>
   </div>
 
@@ -767,8 +791,32 @@ textarea { resize: vertical; min-height: 70px; }
       </div>
     </div>
     <div class="field">
-      <label>Supplements taken today? <span>(list what he took)</span></label>
-      <input type="text" id="eodSupplements" placeholder="e.g. magnesium, vitamin D, fish oil...">
+      <label>Supplements taken today?</label>
+      <div class="chips" id="suppChipsEOD" style="margin-bottom:8px;">
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Ketotifen</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">5-MTHF</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">NAC</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Xyzal</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Apigenin</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Probiotic</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Saffron</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Lithium</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Atrantil</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">S. Boulardii</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Gluten Ease</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Magnesium</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Luteolin</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Vitamin D3</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Vitamin A</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">L-Theanine</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Quercetin</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Biocide</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Digest Complete</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Pepcid</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Turmeric</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Fever Few</div>
+      </div>
+      <input type="text" id="eodSupplementsOther" placeholder="Other supplements (optional)..." style="margin-top:4px;">
     </div>
   </div>
 
@@ -840,7 +888,7 @@ textarea { resize: vertical; min-height: 70px; }
 </div>
 
 <div class="toast" id="toast"></div>
-<input type="hidden" id="scriptUrl" value="https://script.google.com/macros/s/AKfycbzz2h0J0wADtmzQ4lxGxVpjPxyS3nt-q2j-JjhcXGFBoBL0GKl4M4naTe6TU8qTmtFfpg/exec">
+<input type="hidden" id="scriptUrl" value="YOUR_APPS_SCRIPT_URL_HERE">
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────────────────────
@@ -926,6 +974,23 @@ function selectYN(groupId, el, val) {
   const btns = document.querySelectorAll(`#${groupId} .yn-btn`);
   btns.forEach(b => b.className = 'yn-btn');
   el.className = 'yn-btn ' + (val ? 'yes' : 'no');
+}
+
+function toggleSupp(groupId, el) {
+  el.classList.toggle('selected');
+}
+
+function getSupplements(groupId, otherId) {
+  const selected = [...document.querySelectorAll(`#${groupId} .chip.selected`)].map(c => c.textContent.trim());
+  const other = document.getElementById(otherId)?.value.trim();
+  if (other) selected.push(other);
+  return selected.join(', ');
+}
+
+function resetSupps(groupId, otherId) {
+  document.querySelectorAll(`#${groupId} .chip`).forEach(c => c.classList.remove('selected'));
+  const other = document.getElementById(otherId);
+  if (other) other.value = '';
 }
 
 function getSelectedChip(groupId) {
@@ -1069,7 +1134,7 @@ async function submitCheckin() {
     sleepNotes,
     poop: selectedPoop === null ? '' : selectedPoop ? 'Yes' : 'No',
     discomfort: getSelectedChip('discomfortChips'),
-    supplements: document.getElementById('supplementsText').value.trim(),
+    supplements: getSupplements('suppChipsMorning', 'supplementsOtherMorning'),
     wakeUpMood: getSelectedChip('wakeChips'),
     arrivalReg: selectedArrivalReg || '',
     jawanaReport,
@@ -1110,9 +1175,10 @@ function resetCheckinForm() {
   ['sleepQualityChips','discomfortChips','wakeChips'].forEach(id => {
     document.querySelectorAll(`#${id} .chip`).forEach(c => c.className = 'chip');
   });
-  ['poopYN','supplementsYN'].forEach(id => {
+  ['poopYN'].forEach(id => {
     document.querySelectorAll(`#${id} .yn-btn`).forEach(b => b.className = 'yn-btn');
   });
+  resetSupps('suppChipsMorning', 'supplementsOtherMorning');
   document.querySelectorAll('#arrivalRegScale .scale-btn').forEach(b => b.className = 'scale-btn');
   document.getElementById('bedtime').value = '';
   document.getElementById('waketime').value = '';
@@ -1218,7 +1284,7 @@ async function submitEOD() {
     behaviorNotes: document.getElementById('eodBehaviorText').value.trim(),
     poop: selectedEODPoop === null ? '' : selectedEODPoop ? 'Yes' : 'No',
     discomfort: getSelectedChip('eodDiscomfortChips'),
-    supplements: document.getElementById('eodSupplements').value.trim(),
+    supplements: getSupplements('suppChipsEOD', 'eodSupplementsOther'),
     mealSummaryToday: mealSummary,
     overallEating: document.getElementById('eodOverallEating').value.trim(),
     endReg: selectedEODEndReg || '',
@@ -1266,6 +1332,7 @@ function resetEODForm() {
   ['eodBehaviorYN','eodPoopYN'].forEach(id => {
     document.querySelectorAll(`#${id} .yn-btn`).forEach(b => b.className = 'yn-btn');
   });
+  resetSupps('suppChipsEOD', 'eodSupplementsOther');
   document.getElementById('eodBehaviorText').value = '';
   document.getElementById('eodSupplements').value = '';
   document.getElementById('eodOverallEating').value = '';
@@ -1303,4 +1370,3 @@ function showToast(msg, isError=false) {
 </script>
 </body>
 </html>
-
