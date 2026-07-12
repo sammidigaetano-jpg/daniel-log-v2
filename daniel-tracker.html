@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Daniel — Session Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root {
+  --navy:#1B2A4A; --teal:#2A7F7F; --seafoam:#5BB5A2; --lt-teal:#E6F4F1;
+  --orange:#E07B39; --lt-orange:#FDF0E8; --purple:#6B4E8A;
+  --green:#4A8C5C; --lt-green:#EBF5EF; --red:#8B2020; --yellow:#D4A017;
+  --gray:#F5F7FA; --border:#E0E6ED; --text:#1B2A4A; --muted:#8A9BB0;
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#F0F4F8; color:var(--text); min-height:100vh; }
+.header { background:var(--navy); padding:16px 20px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:100; }
+.header-icon { width:38px; height:38px; background:var(--teal); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.header-icon i { color:white; font-size:20px; }
+.header h1 { font-size:16px; font-weight:600; color:white; }
+.header p { font-size:11px; color:rgba(255,255,255,.6); margin-top:1px; }
+.tab-bar { display:flex; background:white; border-bottom:1px solid var(--border); position:sticky; top:70px; z-index:99; overflow-x:auto; }
+.tab { flex:1; min-width:80px; padding:12px 8px; font-size:12px; font-weight:500; color:var(--muted); text-align:center; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; }
+.tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+.content { padding:16px; max-width:640px; margin:0 auto; padding-bottom:60px; }
+.hidden { display:none !important; }
+.card { background:white; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid var(--border); }
+.card-title { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.card-title i { font-size:14px; color:var(--teal); }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.row1 { margin-bottom:10px; }
+label { font-size:12px; color:var(--muted); display:block; margin-bottom:4px; font-weight:500; }
+input,select,textarea { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; color:var(--text); background:var(--gray); font-family:inherit; -webkit-appearance:none; appearance:none; }
+input:focus,select:focus,textarea:focus { outline:none; border-color:var(--teal); background:white; }
+textarea { min-height:70px; resize:vertical; line-height:1.5; }
+.reg-scale { display:flex; gap:6px; margin-top:4px; }
+.reg-btn { flex:1; height:44px; border-radius:8px; border:1.5px solid var(--border); background:var(--gray); font-size:16px; font-weight:600; cursor:pointer; color:var(--muted); }
+.reg-btn.s1{background:var(--red);color:white;border-color:var(--red);}
+.reg-btn.s2{background:var(--orange);color:white;border-color:var(--orange);}
+.reg-btn.s3{background:var(--yellow);color:white;border-color:var(--yellow);}
+.reg-btn.s4{background:var(--green);color:white;border-color:var(--green);}
+.reg-btn.s5{background:var(--teal);color:white;border-color:var(--teal);}
+.reg-label { font-size:11px; color:var(--muted); margin-top:5px; text-align:center; min-height:16px; }
+.engage-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+.eng-btn { padding:10px 8px; border-radius:8px; border:1.5px solid var(--border); background:var(--gray); font-size:12px; font-weight:500; cursor:pointer; text-align:center; color:var(--muted); }
+.eng-btn.ew{background:var(--teal);color:white;border-color:var(--teal);}
+.eng-btn.ep{background:var(--seafoam);color:white;border-color:var(--seafoam);}
+.eng-btn.er{background:var(--orange);color:white;border-color:var(--orange);}
+.eng-btn.ef{background:var(--red);color:white;border-color:var(--red);}
+.beh-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+.beh-chip { padding:9px 8px; border-radius:8px; border:1.5px solid var(--border); background:var(--gray); font-size:12px; font-weight:500; cursor:pointer; text-align:center; color:var(--muted); }
+.beh-chip.on { background:var(--navy); color:white; border-color:var(--navy); }
+.submit-btn { width:100%; padding:16px; border-radius:12px; background:var(--navy); color:white; font-size:15px; font-weight:600; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+.submit-btn:disabled { opacity:.5; }
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--green); color:white; padding:12px 24px; border-radius:24px; font-size:14px; font-weight:500; display:none; align-items:center; gap:8px; z-index:999; box-shadow:0 4px 20px rgba(0,0,0,.2); white-space:nowrap; }
+.toast.show { display:flex; }
+.toast.error { background:var(--red); }
+.stat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.stat-box { background:var(--lt-teal); border-radius:10px; padding:14px; text-align:center; }
+.stat-box .num { font-size:24px; font-weight:700; color:var(--navy); }
+.stat-box .lbl { font-size:11px; color:var(--muted); margin-top:2px; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th { text-align:left; padding:8px 6px; background:var(--lt-teal); color:var(--navy); font-weight:600; border-bottom:1px solid var(--border); }
+td { padding:8px 6px; border-bottom:1px solid var(--border); color:var(--text); }
+tr:last-child td { border-bottom:none; }
+.table-wrap { overflow-x:auto; }
+.bar-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.bar-label { width:110px; font-size:11px; color:var(--muted); flex-shrink:0; }
+.bar-track { flex:1; height:16px; background:var(--gray); border-radius:8px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:8px; }
+.bar-val { width:34px; font-size:11px; color:var(--text); text-align:right; flex-shrink:0; }
+.pill { display:inline-block; padding:2px 8px; border-radius:6px; font-size:10px; font-weight:600; }
+.empty-state { text-align:center; padding:30px 16px; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon"><i class="ti ti-clipboard-list"></i></div>
+  <div><h1>Daniel — Session Tracker</h1><p id="header-sub">Loading…</p></div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="showTab('log')" id="tab-log">Log</div>
+  <div class="tab" onclick="showTab('dash')" id="tab-dash">Dashboard</div>
+  <div class="tab" onclick="showTab('activity')" id="tab-activity">By Activity</div>
+  <div class="tab" onclick="showTab('time')" id="tab-time">Time of Day</div>
+  <div class="tab" onclick="showTab('data')" id="tab-data">Raw Data</div>
+</div>
+
+<!-- ============ LOG ENTRY ============ -->
+<div class="content" id="view-log">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-calendar"></i> Session basics</div>
+    <div class="row2">
+      <div><label>Date</label><input type="date" id="f-date"></div>
+      <div><label>Time</label><input type="time" id="f-time"></div>
+    </div>
+    <div class="row2">
+      <div><label>Your name</label><select id="f-staff"><option value="">Select...</option><option>Sammi</option><option>Anthony</option><option>Katie</option><option>Ann</option></select></div>
+      <div><label>Lead today</label><select id="f-lead"><option value="">Select...</option><option>Sammi</option><option>Anthony</option><option>Katie</option><option>Ann</option></select></div>
+    </div>
+    <div class="row1"><label>Activity</label><input type="text" id="f-activity" placeholder="Scooter, Sky Zone, Morning Routine..."></div>
+    <div class="row2">
+      <div><label>Location</label><input type="text" id="f-location" placeholder="Home, park..."></div>
+      <div><label>Others present</label><input type="text" id="f-others" placeholder="Sammi, Anthony..."></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-activity"></i> Regulation</div>
+    <label>At the START</label>
+    <div class="reg-scale" id="reg-s"></div>
+    <div class="reg-label" id="rl-s">tap to select</div>
+    <label style="margin-top:12px">At the END</label>
+    <div class="reg-scale" id="reg-e"></div>
+    <div class="reg-label" id="rl-e">tap to select</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-hand-move"></i> Engagement level</div>
+    <div class="engage-grid">
+      <button class="eng-btn" onclick="setEng('Willing',this)">✓ Willing</button>
+      <button class="eng-btn" onclick="setEng('Needed prompting',this)">↗ Needed prompting</button>
+      <button class="eng-btn" onclick="setEng('Resistant',this)">~ Resistant</button>
+      <button class="eng-btn" onclick="setEng('Refused',this)">✗ Refused</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-alert-triangle"></i> Behavior episode</div>
+    <div class="row2">
+      <div><label>Any episodes?</label><select id="f-byn" onchange="toggleBeh(this.value)"><option value="">Select...</option><option>No</option><option>Yes</option></select></div>
+      <div id="dur-wrap" class="hidden"><label>Duration (mins)</label><input type="number" id="f-dur" min="0" placeholder="0"></div>
+    </div>
+    <div id="beh-detail" class="hidden">
+      <label style="margin-top:8px;margin-bottom:4px">Which behaviors?</label>
+      <div class="beh-grid" id="beh-grid"></div>
+      <div class="row1" style="margin-top:10px"><label>Antecedent — what happened right before</label><textarea id="f-ante" placeholder="Use talk-to-text — what was happening, who said what..."></textarea></div>
+      <div class="row1"><label>Team response</label><textarea id="f-resp" placeholder="Use talk-to-text — be specific..."></textarea></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-notes"></i> Notes</div>
+    <div class="row1"><label>Positive moments</label><textarea id="f-pos" placeholder="Connection, willingness, smiles, initiations..."></textarea></div>
+    <div class="row1"><label>Additional notes</label><textarea id="f-notes" placeholder="Patterns, gut feelings, anything worth capturing..." style="min-height:90px"></textarea></div>
+  </div>
+
+  <button class="submit-btn" onclick="submitSession()" id="sub-btn"><i class="ti ti-send"></i> Save Session</button>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div class="content hidden" id="view-dash">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-chart-bar"></i> Summary</div>
+    <div class="stat-grid" id="summary-stats"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-trending-up"></i> Weekly elevation trend</div>
+    <div id="week-trend"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-alert-triangle"></i> Recent behavior episodes</div>
+    <div id="recent-behaviors" class="table-wrap"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-star"></i> Recent positive moments</div>
+    <div id="recent-positives"></div>
+  </div>
+</div>
+
+<!-- ============ BY ACTIVITY ============ -->
+<div class="content hidden" id="view-activity">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-list"></i> Behavior rate by activity</div>
+    <div id="activity-behavior"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-mood-smile"></i> Avg ending regulation by activity</div>
+    <div id="activity-regulation"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-chart-pie"></i> Engagement breakdown</div>
+    <div id="engagement-breakdown"></div>
+  </div>
+</div>
+
+<!-- ============ TIME OF DAY ============ -->
+<div class="content hidden" id="view-time">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-clock"></i> Elevation by time window</div>
+    <div id="time-of-day"></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5">Aim for at least 3–5 sessions per window before treating it as confirmed.</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-calendar-event"></i> Baseline vs current, by activity</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Phase change: June 9, 2026</div>
+    <div id="baseline-current" class="table-wrap"></div>
+  </div>
+</div>
+
+<!-- ============ RAW DATA ============ -->
+<div class="content hidden" id="view-data">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-table"></i> All sessions</div>
+    <button class="submit-btn" style="margin-bottom:12px;background:var(--teal)" onclick="exportCSV()"><i class="ti ti-download"></i> Export as CSV</button>
+    <div id="raw-table" class="table-wrap"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="ti ti-circle-check"></i> <span id="toast-msg">Saved!</span></div>
+
+<script>
+const LABELS=['','Fully dysregulated','Elevated','Neutral','Calm','Fully regulated'];
+const BEHAVIORS=['Vocal escalation','Verbal loop','Task refusal','Transition refusal','SIB (self-pinching)','Hair reaching','Meltdown','Other'];
+let rs=null, re=null, eng=null, behs=[];
+let SESSIONS = [];
+const STORAGE_KEY = 'daniel-sessions';
+
+// Seed data migrated from the Google Sheet (sessions through 6/26/2026)
+const SEED = [
+{date:"2026-05-30",time:"18:57",staff:"Sammi",lead:"Sammi",activity:"Jumping",location:"Skyzone",others:"Anthony",regStart:4,regEnd:2,engagement:"Needed prompting",behaviorYN:"No",behaviorTypes:"",antecedent:"",response:"",duration:"",positive:"",notes:""},
+{date:"2026-05-30",time:"19:23",staff:"Sammi",lead:"Sammi",activity:"Lunch",location:"Roots",others:"Ann",regStart:3,regEnd:2,engagement:"Resistant",behaviorYN:"Yes",behaviorTypes:"Vocal escalation, Task refusal, Verbal loop",antecedent:"As we walked into the store, he was fine, but as we walked towards the counter, he realized that we were gonna have him order. He became very verbal and had loops towards Ann and I so we decided to walk him back to the table.",response:"Response was that we said OK you do not have to order today and we decided to walk quietly",duration:"",positive:"A positive moment is that when we got back to the table, his mood seemed to shift and he attempted to regulate himself. No other reinforcements were needed.",notes:""},
+{date:"2026-06-01",time:"9:00",staff:"Sammi",lead:"Sammi",activity:"Scooter",location:"Home",others:"",regStart:3,regEnd:2,engagement:"Needed prompting",behaviorYN:"Yes",behaviorTypes:"Vocal escalation, Verbal loop, Task refusal, Meltdown",antecedent:"I walked into the house. His dad gave him a hug and I said \"awww\" he got into a heavy loop saying \"no awe\"",response:"I redirected him to the Scooter. We went a bit and then he immediately turned around. Walked in the house and got in his moms face saying \"no awe\"",duration:"5",positive:"He did MUCH better the second time",notes:""},
+{date:"2026-06-01",time:"9:30",staff:"Sammi",lead:"Katie",activity:"Scooter",location:"Home",others:"",regStart:3,regEnd:4,engagement:"Willing",behaviorYN:"No",behaviorTypes:"",antecedent:"",response:"",duration:"",positive:"",notes:""},
+{date:"2026-06-01",time:"10:45",staff:"Sammi",lead:"Katie",activity:"Morning Transition",location:"Home",others:"Jwana",regStart:3,regEnd:2,engagement:"Needed prompting",behaviorYN:"Yes",behaviorTypes:"Hair reaching, Verbal loop",antecedent:"Told him to get his shoes and backpack on",response:"We just walked him to the car and continued to prompt him",duration:"1",positive:"",notes:""},
+{date:"2026-06-16",time:"9:00",staff:"Sammi",lead:"Sammi",activity:"Morning Routine",location:"Home",others:"",regStart:4,regEnd:4,engagement:"Willing",behaviorYN:"No",behaviorTypes:"",antecedent:"",response:"",duration:"",positive:"Did amazing",notes:""},
+{date:"2026-06-16",time:"9:15",staff:"Sammi",lead:"Sammi",activity:"Test",location:"",others:"",regStart:4,regEnd:4,engagement:"Willing",behaviorYN:"No",behaviorTypes:"",antecedent:"",response:"",duration:"",positive:"Test entry",notes:""},
+{date:"2026-06-16",time:"10:00",staff:"Anthony",lead:"Anthony",activity:"Scooter",location:"",others:"",regStart:4,regEnd:4,engagement:"Willing",behaviorYN:"No",behaviorTypes:"",antecedent:"",response:"",duration:"",positive:"Daniel did great on the transition. He was very willing to go on a scooter ride.",notes:""},
+{date:"2026-06-16",time:"12:00",staff:"Sammi",lead:"Anthony",activity:"Lunch",location:"",others:"",regStart:4,regEnd:4,engagement:"Willing",behaviorYN:"No",behaviorTypes:"",antecedent:"",response:"",duration:"",positive:"Daniel did great at lunch. He sat down and ate all of his food. He only needed one prompt to come back inside and eat.",notes:""},
+{date:"2026-06-17",time:"9:00",staff:"Sammi",lead:"Anthony",activity:"Morning Routine",location:"",others:"",regStart:2,regEnd:3,engagement:"Resistant",behaviorYN:"Yes",behaviorTypes:"Vocal escalation, Task refusal, Verbal loop",antecedent:"We're not sure, but he did sleep poorly last night and woke up this way",response:"We tried to keep our voices low and conversation low and give him his space",duration:"60",positive:"",notes:""},
+{date:"2026-06-17",time:"10:30",staff:"Anthony",lead:"Anthony",activity:"Scooter",location:"",others:"",regStart:3,regEnd:2,engagement:"Needed prompting",behaviorYN:"Yes",behaviorTypes:"Vocal escalation, Verbal loop",antecedent:"He has been elevated and high loop since he woke up this morning",response:"",duration:"",positive:"",notes:""},
+{date:"2026-06-17",time:"14:00",staff:"Sammi",lead:"Katie",activity:"Sky Zone",location:"",others:"",regStart:3,regEnd:4,engagement:"Willing",behaviorYN:"Yes",behaviorTypes:"Verbal loop",antecedent:"Again, we're not really sure what the antecedent is. He's been a bit elevated since he woke up.",response:"We would just redirect or tell him no more",duration:"",positive:"Daniel did really well at sky zone. He was even jumping with the other kids and falling on his booty.",notes:""},
+{date:"2026-06-19",time:"9:00",staff:"Sammi",lead:"Ann",activity:"Morning Routine",location:"",others:"",regStart:5,regEnd:5,engagement:"Willing",behaviorYN:"No",behaviorTypes:"",antecedent:"",response:"",duration:"",positive:"Amazing morning! Very calm and happy",notes:""},
+{date:"2026-06-22",time:"9:00",staff:"Sammi",lead:"Sammi",activity:"Morning Routine",location:"",others:"",regStart:5,regEnd:3,engagement:"Needed prompting",behaviorYN:"Yes",behaviorTypes:"Verbal loop",antecedent:"Knowing it was time to transition is what started his loop",response:"We got him in the car as soon as possible",duration:"",positive:"He had a GREAT morning overall. His mood shifted briefly when it was time to transition",notes:""},
+{date:"2026-06-22",time:"11:00",staff:"Sammi",lead:"Anthony",activity:"Harveston Park",location:"",others:"",regStart:5,regEnd:5,engagement:"Willing",behaviorYN:"No",behaviorTypes:"",antecedent:"",response:"",duration:"",positive:"We did a lap on his scooter. He was having a great time.",notes:""},
+{date:"2026-06-23",time:"9:00",staff:"Sammi",lead:"Anthony",activity:"Morning Routine",location:"",others:"",regStart:4,regEnd:3,engagement:"Needed prompting",behaviorYN:"Yes",behaviorTypes:"Hair reaching",antecedent:"Daniel was pretty good all morning. Happy ate his breakfast. We believe the antecedent was likely that he knew we were about to transition out of the house.",response:"We kept our voices low, said hands to yourself and I had Anthony go out into the garage",duration:"",positive:"",notes:""},
+{date:"2026-06-23",time:"10:00",staff:"Anthony",lead:"Anthony",activity:"Scooter",location:"",others:"",regStart:4,regEnd:4,engagement:"Willing",behaviorYN:"No",behaviorTypes:"",antecedent:"",response:"",duration:"",positive:"",notes:""},
+{date:"2026-06-23",time:"14:00",staff:"Sammi",lead:"Anthony",activity:"Sky Zone",location:"",others:"",regStart:3,regEnd:2,engagement:"Needed prompting",behaviorYN:"Yes",behaviorTypes:"Verbal loop",antecedent:"The looping starter at the house during transition before we even came to sky zone",response:"We have been doing our best to redirect him",duration:"",positive:"",notes:""}
+];
+
+async function loadSessions() {
+  try {
+    const result = await window.storage.get(STORAGE_KEY, true);
+    SESSIONS = result ? JSON.parse(result.value) : [];
+  } catch (err) {
+    SESSIONS = [];
+  }
+  if (SESSIONS.length === 0) {
+    SESSIONS = SEED;
+    await saveSessions();
+  }
+  document.getElementById('header-sub').textContent = SESSIONS.length + ' sessions logged';
+  renderAll();
+}
+
+async function saveSessions() {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(SESSIONS), true);
+  } catch (err) {
+    showToast('Could not save — try again', true);
+  }
+}
+
+function showTab(t) {
+  ['log','dash','activity','time','data'].forEach(x => {
+    document.getElementById('view-'+x).classList.toggle('hidden', x!==t);
+    document.getElementById('tab-'+x).classList.toggle('active', x===t);
+  });
+  if (t !== 'log') renderAll();
+}
+
+function initRegButtons() {
+  const s = document.getElementById('reg-s'), e = document.getElementById('reg-e');
+  for (let i=1;i<=5;i++) {
+    const bs = document.createElement('button'); bs.className='reg-btn'; bs.textContent=i;
+    bs.onclick = () => { document.querySelectorAll('#reg-s .reg-btn').forEach(b=>b.className='reg-btn'); bs.classList.add('s'+i); rs=i; document.getElementById('rl-s').textContent=i+' — '+LABELS[i]; };
+    s.appendChild(bs);
+    const be = document.createElement('button'); be.className='reg-btn'; be.textContent=i;
+    be.onclick = () => { document.querySelectorAll('#reg-e .reg-btn').forEach(b=>b.className='reg-btn'); be.classList.add('s'+i); re=i; document.getElementById('rl-e').textContent=i+' — '+LABELS[i]; };
+    e.appendChild(be);
+  }
+}
+function setEng(val, btn) {
+  document.querySelectorAll('.eng-btn').forEach(b=>b.className='eng-btn');
+  const map={'Willing':'ew','Needed prompting':'ep','Resistant':'er','Refused':'ef'};
+  btn.classList.add(map[val]); eng = val;
+}
+function toggleBeh(val) {
+  document.getElementById('beh-detail').classList.toggle('hidden', val!=='Yes');
+  document.getElementById('dur-wrap').classList.toggle('hidden', val!=='Yes');
+}
+function initBehChips() {
+  const grid = document.getElementById('beh-grid');
+  BEHAVIORS.forEach(b => {
+    const chip = document.createElement('div'); chip.className='beh-chip'; chip.textContent=b;
+    chip.onclick = () => { chip.classList.toggle('on'); behs = chip.classList.contains('on') ? [...behs,b] : behs.filter(x=>x!==b); };
+    grid.appendChild(chip);
+  });
+}
+function showToast(msg, isErr) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.className = 'toast' + (isErr?' error':'') + ' show';
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+async function submitSession() {
+  const staff = document.getElementById('f-staff').value;
+  const activity = document.getElementById('f-activity').value;
+  if (!staff || !activity) { showToast('Add your name and an activity first', true); return; }
+  const btn = document.getElementById('sub-btn');
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Saving...';
+
+  const entry = {
+    date: document.getElementById('f-date').value,
+    time: document.getElementById('f-time').value,
+    staff, lead: document.getElementById('f-lead').value,
+    activity, location: document.getElementById('f-location').value,
+    others: document.getElementById('f-others').value,
+    regStart: rs, regEnd: re, engagement: eng || '',
+    behaviorYN: document.getElementById('f-byn').value,
+    behaviorTypes: behs.join(', '),
+    antecedent: document.getElementById('f-ante').value,
+    response: document.getElementById('f-resp').value,
+    duration: document.getElementById('f-dur').value,
+    positive: document.getElementById('f-pos').value,
+    notes: document.getElementById('f-notes').value
+  };
+  SESSIONS.push(entry);
+  await saveSessions();
+  document.getElementById('header-sub').textContent = SESSIONS.length + ' sessions logged';
+  showToast('Saved to Daniel\'s tracker!');
+  resetForm();
+  btn.disabled = false; btn.innerHTML = '<i class="ti ti-send"></i> Save Session';
+}
+
+function resetForm() {
+  ['f-activity','f-location','f-others','f-pos','f-notes','f-ante','f-resp','f-dur'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-staff').value=''; document.getElementById('f-lead').value=''; document.getElementById('f-byn').value='';
+  document.getElementById('beh-detail').classList.add('hidden'); document.getElementById('dur-wrap').classList.add('hidden');
+  document.querySelectorAll('.reg-btn').forEach(b=>b.className='reg-btn');
+  document.querySelectorAll('.eng-btn').forEach(b=>b.className='eng-btn');
+  document.querySelectorAll('.beh-chip').forEach(c=>c.classList.remove('on'));
+  document.getElementById('rl-s').textContent='tap to select'; document.getElementById('rl-e').textContent='tap to select';
+  rs=null; re=null; eng=null; behs=[];
+  const now = new Date();
+  document.getElementById('f-date').value = now.toISOString().split('T')[0];
+  document.getElementById('f-time').value = now.toTimeString().slice(0,5);
+}
+
+// ---------- Rendering ----------
+function elevation(score) { return score ? (6-score) : null; }
+function weekLabel(dateStr) {
+  const d = new Date(dateStr+'T00:00:00');
+  const onejan = new Date(d.getFullYear(),0,1);
+  const week = Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);
+  return 'Wk '+week+' ('+(d.getMonth()+1)+'/'+d.getDate()+')';
+}
+function barColor(v) { return v>=4?'#8B2020':v>=3?'#D4A017':'#4A8C5C'; }
+
+function renderAll() {
+  renderDashboard(); renderActivity(); renderTime(); renderRaw();
+}
+
+function renderDashboard() {
+  const total = SESSIONS.length;
+  const starts = SESSIONS.map(s=>s.regStart).filter(v=>v);
+  const ends = SESSIONS.map(s=>s.regEnd).filter(v=>v);
+  const avgS = starts.length ? (starts.reduce((a,b)=>a+b,0)/starts.length).toFixed(1) : '—';
+  const avgE = ends.length ? (ends.reduce((a,b)=>a+b,0)/ends.length).toFixed(1) : '—';
+  const behCount = SESSIONS.filter(s=>String(s.behaviorYN).toLowerCase()==='yes').length;
+  const willing = SESSIONS.filter(s=>String(s.engagement).toLowerCase().includes('willing')).length;
+  const willingPct = total ? Math.round((willing/total)*100) : 0;
+
+  document.getElementById('summary-stats').innerHTML = `
+    <div class="stat-box"><div class="num">${total}</div><div class="lbl">Total Sessions</div></div>
+    <div class="stat-box"><div class="num">${avgS} → ${avgE}</div><div class="lbl">Avg Reg Start → End</div></div>
+    <div class="stat-box"><div class="num">${behCount}</div><div class="lbl">Sessions w/ Behavior</div></div>
+    <div class="stat-box"><div class="num">${willingPct}%</div><div class="lbl">Willing Engagement</div></div>
+  `;
+
+  // Weekly trend
+  const weekMap = {};
+  SESSIONS.forEach(s => {
+    if (!s.date) return;
+    const wk = weekLabel(s.date);
+    if (!weekMap[wk]) weekMap[wk] = {sum:0,count:0,sortKey:s.date};
+    if (s.regStart) { weekMap[wk].sum += elevation(s.regStart); weekMap[wk].count++; }
+    if (s.regEnd) { weekMap[wk].sum += elevation(s.regEnd); weekMap[wk].count++; }
+  });
+  const weeks = Object.entries(weekMap).sort((a,b)=>a[1].sortKey.localeCompare(b[1].sortKey));
+  document.getElementById('week-trend').innerHTML = weeks.length ? weeks.map(([label,d])=>{
+    const avg = (d.sum/d.count).toFixed(1);
+    const pct = (avg/5)*100;
+    return `<div class="bar-row"><div class="bar-label">${label}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${barColor(avg)}"></div></div><div class="bar-val">${avg}</div></div>`;
+  }).join('') : '<div class="empty-state">No data yet</div>';
+
+  // Recent behaviors
+  const behRows = SESSIONS.filter(s=>String(s.behaviorYN).toLowerCase()==='yes').slice(-8).reverse();
+  document.getElementById('recent-behaviors').innerHTML = behRows.length ? `<table><tr><th>Date</th><th>Activity</th><th>Behaviors</th><th>Antecedent</th></tr>${behRows.map(s=>`<tr><td>${s.date}</td><td>${s.activity}</td><td>${s.behaviorTypes}</td><td style="max-width:200px">${(s.antecedent||'').slice(0,80)}${(s.antecedent||'').length>80?'…':''}</td></tr>`).join('')}</table>` : '<div class="empty-state">No behavior episodes logged</div>';
+
+  // Recent positives
+  const posRows = SESSIONS.filter(s=>s.positive && s.positive.trim()).slice(-5).reverse();
+  document.getElementById('recent-positives').innerHTML = posRows.length ? posRows.map(s=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><strong>${s.date} · ${s.activity}:</strong> ${s.positive}</div>`).join('') : '<div class="empty-state">No positive moments logged yet</div>';
+}
+
+function renderActivity() {
+  const actMap = {};
+  SESSIONS.forEach(s => {
+    const act = s.activity || 'Unknown';
+    if (!actMap[act]) actMap[act] = {total:0,beh:0,endSum:0,endCount:0};
+    actMap[act].total++;
+    if (String(s.behaviorYN).toLowerCase()==='yes') actMap[act].beh++;
+    if (s.regEnd) { actMap[act].endSum += s.regEnd; actMap[act].endCount++; }
+  });
+  const rows = Object.entries(actMap).map(([act,d])=>({act,pct:Math.round((d.beh/d.total)*100),total:d.total,avgEnd:d.endCount?(d.endSum/d.endCount).toFixed(1):null})).sort((a,b)=>b.pct-a.pct);
+
+  document.getElementById('activity-behavior').innerHTML = rows.length ? rows.map(r=>`<div class="bar-row"><div class="bar-label">${r.act}</div><div class="bar-track"><div class="bar-fill" style="width:${r.pct}%;background:var(--red)"></div></div><div class="bar-val">${r.pct}%</div></div>`).join('') : '<div class="empty-state">No data yet</div>';
+
+  const regRows = rows.filter(r=>r.avgEnd).sort((a,b)=>b.avgEnd-a.avgEnd);
+  document.getElementById('activity-regulation').innerHTML = regRows.length ? regRows.map(r=>`<div class="bar-row"><div class="bar-label">${r.act}</div><div class="bar-track"><div class="bar-fill" style="width:${(r.avgEnd/5)*100}%;background:var(--teal)"></div></div><div class="bar-val">${r.avgEnd}</div></div>`).join('') : '<div class="empty-state">No data yet</div>';
+
+  const engMap = {};
+  SESSIONS.forEach(s => { const e = s.engagement||'Unspecified'; if(!e) return; engMap[e]=(engMap[e]||0)+1; });
+  const engRows = Object.entries(engMap).sort((a,b)=>b[1]-a[1]);
+  const engTotal = engRows.reduce((a,[,v])=>a+v,0);
+  const colors = {'Willing':'#2A7F7F','Needed prompting':'#5BB5A2','Resistant':'#E07B39','Refused':'#8B2020'};
+  document.getElementById('engagement-breakdown').innerHTML = engRows.length ? engRows.map(([k,v])=>{
+    const pct = Math.round((v/engTotal)*100);
+    return `<div class="bar-row"><div class="bar-label">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${colors[k]||'#8A9BB0'}"></div></div><div class="bar-val">${v}</div></div>`;
+  }).join('') : '<div class="empty-state">No data yet</div>';
+}
+
+function renderTime() {
+  const windows = [
+    {label:'8:30–10:00 AM', start:8.5, end:10},
+    {label:'10:00 AM–12:00 PM', start:10, end:12},
+    {label:'12:00–3:00 PM', start:12, end:15},
+    {label:'3:00–4:30 PM', start:15, end:16.5}
+  ];
+  function toDec(t) { if(!t) return null; const p=t.split(':'); return parseInt(p[0])+(parseInt(p[1])/60); }
+  const stats = windows.map(w=>({...w,sum:0,count:0,total:0,beh:0}));
+  SESSIONS.forEach(s => {
+    const t = toDec(s.time); if (t===null) return;
+    const idx = windows.findIndex(w=>t>=w.start && t<w.end); if (idx===-1) return;
+    stats[idx].total++;
+    if (s.regStart) { stats[idx].sum += elevation(s.regStart); stats[idx].count++; }
+    if (String(s.behaviorYN).toLowerCase()==='yes') stats[idx].beh++;
+  });
+  document.getElementById('time-of-day').innerHTML = stats.map(s=>{
+    if (!s.count) return `<div class="bar-row"><div class="bar-label">${s.label}</div><div class="bar-track"></div><div class="bar-val">—</div></div>`;
+    const avg = (s.sum/s.count).toFixed(1);
+    const rec = avg>=4?'❌':avg>=3?'⚠️':'✅';
+    return `<div class="bar-row"><div class="bar-label">${s.label}</div><div class="bar-track"><div class="bar-fill" style="width:${(avg/5)*100}%;background:${barColor(avg)}"></div></div><div class="bar-val">${rec} ${avg}</div></div>`;
+  }).join('');
+
+  // Baseline vs current
+  const PHASE = '2026-06-09';
+  const pre = SESSIONS.filter(s=>s.date && s.date < PHASE);
+  const post = SESSIONS.filter(s=>s.date && s.date >= PHASE);
+  function avgByAct(arr) {
+    const m={};
+    arr.forEach(s=>{ if(!s.regEnd) return; const a=s.activity||'Unknown'; if(!m[a])m[a]={sum:0,count:0}; m[a].sum+=elevation(s.regEnd); m[a].count++; });
+    return m;
+  }
+  const preM = avgByAct(pre), postM = avgByAct(post);
+  const acts = [...new Set([...Object.keys(preM),...Object.keys(postM)])];
+  document.getElementById('baseline-current').innerHTML = acts.length ? `<table><tr><th>Activity</th><th>Baseline</th><th>Current</th></tr>${acts.map(a=>{
+    const p = preM[a] ? (preM[a].sum/preM[a].count).toFixed(1) : '—';
+    const c = postM[a] ? (postM[a].sum/postM[a].count).toFixed(1) : '—';
+    return `<tr><td>${a}</td><td>${p}</td><td>${c}</td></tr>`;
+  }).join('')}</table>` : '<div class="empty-state">No data yet</div>';
+}
+
+function renderRaw() {
+  const rows = [...SESSIONS].reverse();
+  document.getElementById('raw-table').innerHTML = rows.length ? `<table><tr><th>Date</th><th>Time</th><th>Staff</th><th>Activity</th><th>Reg S→E</th><th>Engagement</th><th>Behavior?</th></tr>${rows.map(s=>`<tr><td>${s.date||''}</td><td>${s.time||''}</td><td>${s.staff||''}</td><td>${s.activity||''}</td><td>${s.regStart||'—'}→${s.regEnd||'—'}</td><td>${s.engagement||''}</td><td>${s.behaviorYN||''}</td></tr>`).join('')}</table>` : '<div class="empty-state">No sessions yet</div>';
+}
+
+function exportCSV() {
+  const headers = ['Date','Time','Staff','Lead','Activity','Location','Others','RegStart','RegEnd','Engagement','Behavior?','BehaviorTypes','Antecedent','Response','Duration','Positive','Notes'];
+  const rows = SESSIONS.map(s => [s.date,s.time,s.staff,s.lead,s.activity,s.location,s.others,s.regStart,s.regEnd,s.engagement,s.behaviorYN,s.behaviorTypes,s.antecedent,s.response,s.duration,s.positive,s.notes]
+    .map(v => '"'+String(v||'').replace(/"/g,'""')+'"').join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'daniel-sessions.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Init
+initRegButtons();
+initBehChips();
+resetForm();
+loadSessions();
+</script>
+</body>
+</html>
