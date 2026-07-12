@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DaAk — Wellness Tracker</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #1B2A4A; --teal: #2A7F7F; --seafoam: #5BB5A2; --ocean-pale: #E6F4F1;
+  --sand: #F7F4EE; --coral: #E07A5F; --green: #4A8C5C; --yellow: #D4A017;
+  --soft-yellow: #FFF9E6; --lavender: #6B4E8A; --text: #1B2A4A; --muted: #6B8A99;
+  --white: #FFFFFF; --border: #D0E4EC; --radius: 14px; --shadow: 0 2px 12px rgba(27,42,74,0.08);
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--sand); color: var(--text); min-height: 100vh; padding-bottom: 80px; }
+header { background: var(--navy); padding: 18px 20px 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px rgba(27,42,74,0.25); }
+.header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.header-icon { width: 40px; height: 40px; background: var(--teal); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+.header-text h1 { font-size: 1.1rem; font-weight: 700; color: var(--white); }
+.header-text p { font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-top: 1px; }
+.date-chip { margin-left: auto; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); font-size: 0.75rem; font-weight: 600; padding: 5px 10px; border-radius: 20px; white-space: nowrap; }
+.tabs { display: flex; border-top: 1px solid rgba(255,255,255,0.1); }
+.tab { flex: 1; padding: 11px 8px; color: rgba(255,255,255,0.55); font-size: 0.8rem; font-weight: 600; cursor: pointer; border-bottom: 2.5px solid transparent; transition: all 0.15s; text-align: center; letter-spacing: 0.01em; }
+.tab.active { color: var(--white); border-bottom-color: var(--seafoam); }
+.view { display: none; padding: 16px; }
+.view.active { display: block; }
+.card { background: var(--white); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.card-icon { font-size: 1.1rem; width: 32px; height: 32px; background: var(--ocean-pale); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.card-title { font-size: 0.82rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+.card-subtitle { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+label span { font-weight: 400; color: var(--muted); font-size: 0.75rem; }
+input[type=text], input[type=time], input[type=date], select, textarea { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 0.88rem; color: var(--text); background: var(--white); transition: border-color 0.15s; -webkit-appearance: none; font-family: inherit; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(42,127,127,0.1); }
+textarea { resize: vertical; min-height: 70px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.scale { display: flex; gap: 6px; }
+.scale-btn { flex: 1; padding: 10px 4px 8px; border-radius: 9px; border: 2px solid var(--border); background: var(--white); font-size: 1rem; cursor: pointer; text-align: center; transition: all 0.15s; line-height: 1; }
+.scale-label { font-size: 0.6rem; color: var(--muted); margin-top: 3px; display: block; }
+.scale-btn.s1 { background: #EBF5EF; border-color: #4A8C5C; }
+.scale-btn.s2 { background: #EBF5EF; border-color: #4A8C5C; }
+.scale-btn.s3 { background: #FFF9E6; border-color: #D4A017; }
+.scale-btn.s4 { background: #FDF0E8; border-color: #E07B39; }
+.scale-btn.s5 { background: #FDEDED; border-color: #8B2020; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--white); font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: all 0.15s; color: var(--muted); }
+.chip.selected { background: var(--teal); border-color: var(--teal); color: var(--white); font-weight: 600; }
+.chip.selected-green { background: var(--green); border-color: var(--green); color: var(--white); }
+.chip.selected-coral { background: var(--coral); border-color: var(--coral); color: var(--white); }
+.chip.selected-yellow { background: var(--yellow); border-color: var(--yellow); color: var(--white); }
+.yn { display: flex; gap: 10px; }
+.yn-btn { flex: 1; padding: 12px; border-radius: 9px; border: 2px solid var(--border); background: var(--white); font-size: 0.9rem; font-weight: 700; cursor: pointer; text-align: center; transition: all 0.15s; color: var(--muted); }
+.yn-btn.yes { background: #EBF5EF; border-color: var(--green); color: var(--green); }
+.yn-btn.no { background: #FDEDED; border-color: var(--coral); color: var(--coral); }
+.meal-card { background: var(--ocean-pale); border-radius: 10px; padding: 14px; margin-bottom: 10px; border: 1px solid var(--border); position: relative; }
+.meal-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.meal-type-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--teal); }
+.meal-time-badge { font-size: 0.7rem; color: var(--muted); background: var(--white); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border); }
+.submit-btn { width: 100%; padding: 16px; background: var(--navy); color: var(--white); border: none; border-radius: var(--radius); font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 6px; transition: background 0.15s; letter-spacing: 0.02em; font-family: inherit; }
+.submit-btn:hover { background: var(--teal); }
+.submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.submit-btn.meal-btn { background: var(--teal); margin-top: 0; padding: 14px; font-size: 0.95rem; }
+.submit-btn.meal-btn:hover { background: var(--seafoam); }
+.history-entry { background: var(--white); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.history-date { font-weight: 700; font-size: 0.9rem; color: var(--navy); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.history-section { margin-bottom: 8px; }
+.history-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 3px; }
+.history-value { font-size: 0.82rem; color: var(--text); line-height: 1.4; }
+.reg-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+.reg-1, .reg-2 { background: #EBF5EF; color: #4A8C5C; }
+.reg-3 { background: #FFF9E6; color: #8B6914; }
+.reg-4 { background: #FDF0E8; color: #C05A20; }
+.reg-5 { background: #FDEDED; color: #8B2020; }
+.today-meals { background: var(--white); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.today-meals h3 { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 10px; }
+.meal-pill { display: inline-flex; align-items: center; gap: 5px; background: var(--ocean-pale); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 0.78rem; font-weight: 500; margin: 3px 4px 3px 0; color: var(--teal); }
+.empty-state { text-align: center; padding: 36px 20px; color: var(--muted); }
+.empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+.empty-state p { font-size: 0.88rem; line-height: 1.5; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--green); color: var(--white); padding: 12px 24px; border-radius: 24px; font-weight: 600; font-size: 0.88rem; transition: transform 0.3s ease; z-index: 999; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.error { background: var(--coral); }
+.info-box { background: var(--soft-yellow); border: 1px solid #E8C84A; border-radius: 9px; padding: 10px 14px; font-size: 0.8rem; color: #6B5200; margin-bottom: 14px; line-height: 1.5; }
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.stat-box { background: var(--white); border-radius: 10px; padding: 12px 8px; text-align: center; border: 1px solid var(--border); }
+.stat-num { font-size: 1.6rem; font-weight: 800; color: var(--teal); line-height: 1; }
+.stat-lbl { font-size: 0.65rem; color: var(--muted); margin-top: 3px; font-weight: 500; }
+.backup-btn { width: 100%; padding: 14px; background: var(--lavender); color: var(--white); border: none; border-radius: 12px; font-size: 0.9rem; font-weight: 700; cursor: pointer; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="header-icon">🌙</div>
+    <div class="header-text">
+      <h1>DaAk — Wellness Tracker</h1>
+      <p>Sleep · Food · Morning & End of Day</p>
+    </div>
+    <div class="date-chip" id="dateBadge"></div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('meal')">🍽 Meal</div>
+    <div class="tab" onclick="switchTab('morning')">☀️ Morning</div>
+    <div class="tab" onclick="switchTab('eod')">🌙 End of Day</div>
+    <div class="tab" onclick="switchTab('history')">📋 History</div>
+  </div>
+</header>
+
+<div class="view active" id="view-meal">
+  <div class="info-box">📌 Log meals <strong>as they happen</strong> — they'll automatically appear in tomorrow's Morning Check-in so you don't have to remember.</div>
+  <div class="today-meals" id="todayMealsStrip">
+    <h3>Today's meals so far</h3>
+    <div id="todayMealPills"><span style="font-size:0.8rem;color:var(--muted);">Nothing logged yet today.</span></div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon">🍽</div>
+      <div><div class="card-title">Log a Meal</div><div class="card-subtitle">Tap after breakfast, lunch, dinner, or a snack</div></div>
+    </div>
+    <div class="field">
+      <label>Which meal?</label>
+      <div class="chips" id="mealTypeChips">
+        <div class="chip" onclick="selectMealType('Breakfast')">🌅 Breakfast</div>
+        <div class="chip" onclick="selectMealType('Lunch')">☀️ Lunch</div>
+        <div class="chip" onclick="selectMealType('Dinner')">🌙 Dinner</div>
+        <div class="chip" onclick="selectMealType('Snack')">🍎 Snack</div>
+      </div>
+    </div>
+    <div class="field"><label>What did he eat? <span>(quick description)</span></label><textarea id="mealFood" placeholder="e.g. scrambled eggs, toast, orange juice..."></textarea></div>
+    <div class="field">
+      <label>How well did he eat?</label>
+      <div class="chips" id="mealQualityChips">
+        <div class="chip" onclick="selectChip('mealQualityChips', this, 'green')">✅ Ate everything</div>
+        <div class="chip" onclick="selectChip('mealQualityChips', this, 'yellow')">🤏 Picked at it</div>
+        <div class="chip" onclick="selectChip('mealQualityChips', this, 'coral')">❌ Refused</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Sugar intake for this meal?</label>
+      <div class="chips" id="mealSugarChips">
+        <div class="chip" onclick="selectChip('mealSugarChips', this, 'green')">🟢 Low / none</div>
+        <div class="chip" onclick="selectChip('mealSugarChips', this, 'yellow')">🟡 Moderate</div>
+        <div class="chip" onclick="selectChip('mealSugarChips', this, 'coral')">🔴 High</div>
+      </div>
+    </div>
+    <div class="field"><label>Notes <span>(optional)</span></label><input type="text" id="mealNotes" placeholder="Any extra details..."></div>
+    <button class="submit-btn meal-btn" onclick="submitMeal()">Save Meal Log</button>
+  </div>
+</div>
+
+<div class="view" id="view-morning">
+  <div class="info-box">☀️ Log this each morning when you arrive. Yesterday's meals are pulled in automatically.</div>
+  <div class="card">
+    <div class="card-header"><div class="card-icon">📅</div><div><div class="card-title">For which date?</div><div class="card-subtitle">The night / day before this date</div></div></div>
+    <div class="field"><label>Today's date <span>(morning you're logging for)</span></label><input type="date" id="checkinDate"></div>
+  </div>
+  <div class="card" id="yesterdayMealsCard">
+    <div class="card-header"><div class="card-icon">🍽</div><div><div class="card-title">Yesterday's Meals</div><div class="card-subtitle">Auto-pulled from your meal logs</div></div></div>
+    <div id="yesterdayMealsList"><div style="font-size:0.82rem;color:var(--muted);">Loading yesterday's meals...</div></div>
+    <div class="field" style="margin-top:12px;"><label>Overall eating yesterday <span>(any missing meals or anything to add?)</span></label><input type="text" id="overallEating" placeholder="e.g. skipped lunch, ate well all day..."></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-icon">🌙</div><div><div class="card-title">Sleep Last Night</div><div class="card-subtitle">Based on Jawana's report</div></div></div>
+    <div class="two-col">
+      <div class="field"><label>Bedtime</label><input type="time" id="bedtime"></div>
+      <div class="field"><label>Wake time</label><input type="time" id="waketime"></div>
+    </div>
+    <div class="field">
+      <label>Sleep quality</label>
+      <div class="chips" id="sleepQualityChips">
+        <div class="chip" onclick="selectChip('sleepQualityChips', this, 'green')">😴 Slept through</div>
+        <div class="chip" onclick="selectChip('sleepQualityChips', this, 'yellow')">😟 Restless</div>
+        <div class="chip" onclick="selectChip('sleepQualityChips', this, 'coral')">😩 Multiple wake-ups</div>
+      </div>
+    </div>
+    <div class="field"><label>Sleep notes <span>(optional)</span></label><input type="text" id="sleepNotes" placeholder="e.g. up at 2am, hard to settle..."></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-icon">💩</div><div><div class="card-title">Bathroom & Body</div></div></div>
+    <div class="field">
+      <label>Did he poop today?</label>
+      <div class="yn" id="poopYN">
+        <button class="yn-btn" onclick="selectYN('poopYN', this, true)">✅ Yes</button>
+        <button class="yn-btn" onclick="selectYN('poopYN', this, false)">❌ No</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Any signs of physical discomfort this morning?</label>
+      <div class="chips" id="discomfortChips">
+        <div class="chip" onclick="selectChip('discomfortChips', this, 'green')">😊 None</div>
+        <div class="chip" onclick="selectChip('discomfortChips', this, 'yellow')">🤔 Possibly</div>
+        <div class="chip" onclick="selectChip('discomfortChips', this, 'coral')">😣 Yes — seems uncomfortable</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Supplements taken yesterday?</label>
+      <div class="chips" id="suppChipsMorning" style="margin-bottom:8px;">
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Ketotifen</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">5-MTHF</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">NAC</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Xyzal</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Apigenin</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Probiotic</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Saffron</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Lithium</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Atrantil</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">S. Boulardii</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Gluten Ease</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Magnesium</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Luteolin</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Vitamin D3</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Vitamin A</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">L-Theanine</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Quercetin</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Biocide</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Digest Complete</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Pepcid</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Turmeric</div>
+        <div class="chip" onclick="toggleSupp('suppChipsMorning',this)">Fever Few</div>
+      </div>
+      <input type="text" id="supplementsOtherMorning" placeholder="Other supplements (optional)..." style="margin-top:4px;">
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-icon">☀️</div><div><div class="card-title">Morning Baseline</div><div class="card-subtitle">When you arrived</div></div></div>
+    <div class="field">
+      <label>Jawana's report — how did he wake up?</label>
+      <div class="chips" id="wakeChips">
+        <div class="chip" onclick="selectChip('wakeChips', this, 'green')">😊 Happy / calm</div>
+        <div class="chip" onclick="selectChip('wakeChips', this, 'yellow')">😐 Neutral</div>
+        <div class="chip" onclick="selectChip('wakeChips', this, 'coral')">😤 Difficult wake-up</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>His regulation level when you arrived</label>
+      <div class="scale" id="arrivalRegScale">
+        <div class="scale-btn" onclick="selectScale('arrivalRegScale', this, 1)">1<span class="scale-label">Calm</span></div>
+        <div class="scale-btn" onclick="selectScale('arrivalRegScale', this, 2)">2<span class="scale-label">Regulated</span></div>
+        <div class="scale-btn" onclick="selectScale('arrivalRegScale', this, 3)">3<span class="scale-label">Neutral</span></div>
+        <div class="scale-btn" onclick="selectScale('arrivalRegScale', this, 4)">4<span class="scale-label">Elevated</span></div>
+        <div class="scale-btn" onclick="selectScale('arrivalRegScale', this, 5)">5<span class="scale-label">Crisis</span></div>
+      </div>
+    </div>
+    <div class="field"><label>Anything Jawana flagged from the night?</label><textarea id="jawanaReport" placeholder="e.g. had a hard evening, visitors came, went to bed late, seemed anxious..."></textarea></div>
+  </div>
+  <button class="submit-btn" id="checkinSubmitBtn" onclick="submitCheckin()">Submit Morning Check-in</button>
+</div>
+
+<div class="view" id="view-eod">
+  <div class="info-box">🌙 Log this before you leave for the day — captures how the day wrapped up and sets context for tomorrow.</div>
+  <div class="card"><div class="card-header"><div class="card-icon">📅</div><div><div class="card-title">Date</div></div></div><div class="field"><input type="date" id="eodDate"></div></div>
+  <div class="card">
+    <div class="card-header"><div class="card-icon">📊</div><div><div class="card-title">Overall Day</div><div class="card-subtitle">Big picture summary before you leave</div></div></div>
+    <div class="field">
+      <label>How was his regulation overall today?</label>
+      <div class="scale" id="eodRegScale">
+        <div class="scale-btn" onclick="selectScale('eodRegScale', this, 1)">1<span class="scale-label">Calm</span></div>
+        <div class="scale-btn" onclick="selectScale('eodRegScale', this, 2)">2<span class="scale-label">Regulated</span></div>
+        <div class="scale-btn" onclick="selectScale('eodRegScale', this, 3)">3<span class="scale-label">Neutral</span></div>
+        <div class="scale-btn" onclick="selectScale('eodRegScale', this, 4)">4<span class="scale-label">Elevated</span></div>
+        <div class="scale-btn" onclick="selectScale('eodRegScale', this, 5)">5<span class="scale-label">Crisis</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>How did the day go overall?</label>
+      <div class="chips" id="eodDayChips">
+        <div class="chip" onclick="selectChip('eodDayChips', this, 'green')">✅ Great day</div>
+        <div class="chip" onclick="selectChip('eodDayChips', this, 'green')">😊 Good day</div>
+        <div class="chip" onclick="selectChip('eodDayChips', this, 'yellow')">😐 Mixed day</div>
+        <div class="chip" onclick="selectChip('eodDayChips', this, 'coral')">😤 Hard day</div>
+        <div class="chip" onclick="selectChip('eodDayChips', this, 'coral')">🚨 Crisis day</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Any behavior episodes today?</label>
+      <div class="yn" id="eodBehaviorYN">
+        <button class="yn-btn" onclick="selectYN('eodBehaviorYN', this, true)">✅ Yes</button>
+        <button class="yn-btn" onclick="selectYN('eodBehaviorYN', this, false)">❌ No</button>
+      </div>
+    </div>
+    <div class="field" id="eodBehaviorDetails" style="display:none;"><label>Brief description <span>(full detail is in your session log)</span></label><textarea id="eodBehaviorText" placeholder="e.g. vocal escalation at lunch, meltdown during transition..."></textarea></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-icon">💩</div><div><div class="card-title">Body Check</div></div></div>
+    <div class="field">
+      <label>Did he poop today?</label>
+      <div class="yn" id="eodPoopYN">
+        <button class="yn-btn" onclick="selectYN('eodPoopYN', this, true)">✅ Yes</button>
+        <button class="yn-btn" onclick="selectYN('eodPoopYN', this, false)">❌ No</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Any signs of physical discomfort today?</label>
+      <div class="chips" id="eodDiscomfortChips">
+        <div class="chip" onclick="selectChip('eodDiscomfortChips', this, 'green')">😊 None</div>
+        <div class="chip" onclick="selectChip('eodDiscomfortChips', this, 'yellow')">🤔 Possibly</div>
+        <div class="chip" onclick="selectChip('eodDiscomfortChips', this, 'coral')">😣 Yes — seemed uncomfortable</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Supplements taken today?</label>
+      <div class="chips" id="suppChipsEOD" style="margin-bottom:8px;">
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Ketotifen</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">5-MTHF</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">NAC</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Xyzal</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Apigenin</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Probiotic</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Saffron</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Lithium</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Atrantil</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">S. Boulardii</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Gluten Ease</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Magnesium</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Luteolin</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Vitamin D3</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Vitamin A</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">L-Theanine</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Quercetin</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Biocide</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Digest Complete</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Pepcid</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Turmeric</div>
+        <div class="chip" onclick="toggleSupp('suppChipsEOD',this)">Fever Few</div>
+      </div>
+      <input type="text" id="eodSupplementsOther" placeholder="Other supplements (optional)..." style="margin-top:4px;">
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-icon">🍽</div><div><div class="card-title">Food Today</div><div class="card-subtitle">Auto-pulled from today's meal logs</div></div></div>
+    <div id="eodMealsList"></div>
+    <div class="field" style="margin-top:12px;"><label>Overall eating today <span>(anything to add?)</span></label><input type="text" id="eodOverallEating" placeholder="e.g. great appetite, refused dinner..."></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-icon">🌆</div><div><div class="card-title">End of Day Mood</div><div class="card-subtitle">How he's heading into the evening</div></div></div>
+    <div class="field">
+      <label>His regulation level when you left</label>
+      <div class="scale" id="eodEndRegScale">
+        <div class="scale-btn" onclick="selectScale('eodEndRegScale', this, 1)">1<span class="scale-label">Calm</span></div>
+        <div class="scale-btn" onclick="selectScale('eodEndRegScale', this, 2)">2<span class="scale-label">Regulated</span></div>
+        <div class="scale-btn" onclick="selectScale('eodEndRegScale', this, 3)">3<span class="scale-label">Neutral</span></div>
+        <div class="scale-btn" onclick="selectScale('eodEndRegScale', this, 4)">4<span class="scale-label">Elevated</span></div>
+        <div class="scale-btn" onclick="selectScale('eodEndRegScale', this, 5)">5<span class="scale-label">Crisis</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>His mood going into the evening</label>
+      <div class="chips" id="eodEveningMoodChips">
+        <div class="chip" onclick="selectChip('eodEveningMoodChips', this, 'green')">😊 Calm / happy</div>
+        <div class="chip" onclick="selectChip('eodEveningMoodChips', this, 'yellow')">😐 Neutral</div>
+        <div class="chip" onclick="selectChip('eodEveningMoodChips', this, 'coral')">😤 Still elevated</div>
+        <div class="chip" onclick="selectChip('eodEveningMoodChips', this, 'coral')">😩 Exhausted / withdrawn</div>
+      </div>
+    </div>
+    <div class="field"><label>Anything to flag for tomorrow? <span>(for context when you arrive)</span></label><textarea id="eodNotes" placeholder="e.g. had a hard day, might need extra regulation support tomorrow, Jawana mentioned upcoming appointment..."></textarea></div>
+    <div class="field"><label>One win from today <span>(optional but good practice)</span></label><input type="text" id="eodWin" placeholder="e.g. initiated scooter ride, ate full lunch, calm during transition..."></div>
+  </div>
+  <button class="submit-btn" id="eodSubmitBtn" onclick="submitEOD()" style="background:var(--lavender);">Submit End of Day Check-in</button>
+</div>
+
+<div class="view" id="view-history">
+  <button class="backup-btn" onclick="downloadBackup()">⬇️ Download Backup (do this first!)</button>
+  <div class="stat-row" id="historyStats">
+    <div class="stat-box"><div class="stat-num" id="statCheckins">—</div><div class="stat-lbl">Check-ins</div></div>
+    <div class="stat-box"><div class="stat-num" id="statMeals">—</div><div class="stat-lbl">Meals Logged</div></div>
+    <div class="stat-box"><div class="stat-num" id="statAvgReg">—</div><div class="stat-lbl">Avg Arrival Reg</div></div>
+  </div>
+  <div id="historyList"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="hidden" id="scriptUrl" value="https://script.google.com/macros/s/AKfycbw4RVIFg4Fyb2cCM7uyoPEP2wm_napKj9b9oU9_MKyjDq8_88hzFi2qRpXRwWkKM0n0lg/exec">
+
+<script>
+const SHEET_ID = '16AcwX2bgHpd4eYgphIVhwBmZ5XoLg2RIKkebVobPYvQ';
+const MEAL_SHEET = '🍽 Meal Log';
+const CHECKIN_SHEET = '☀️ Morning Check-in';
+const EOD_SHEET = '🌙 End of Day';
+
+let selectedMealType = '';
+let selectedSleepQuality = '';
+let selectedPoop = null;
+let selectedArrivalReg = null;
+let selectedEODReg = null;
+let selectedEODEndReg = null;
+let selectedEODBehavior = null;
+let selectedEODPoop = null;
+
+let meals = JSON.parse(localStorage.getItem('daak_meals') || '[]');
+let checkins = JSON.parse(localStorage.getItem('daak_checkins') || '[]');
+
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date();
+  document.getElementById('dateBadge').textContent = today.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+  document.getElementById('checkinDate').value = today.toISOString().split('T')[0];
+  document.getElementById('eodDate').value = today.toISOString().split('T')[0];
+  document.getElementById('checkinDate').addEventListener('change', loadYesterdayMeals);
+  renderTodayMeals();
+  loadYesterdayMeals();
+  loadTodayMealsEOD();
+  renderHistory();
+});
+
+function switchTab(tab) {
+  ['meal','morning','eod','history'].forEach((t,i) => {
+    document.querySelectorAll('.tab')[i].classList.toggle('active', t===tab);
+    document.getElementById('view-'+t).classList.toggle('active', t===tab);
+  });
+  if (tab==='morning') loadYesterdayMeals();
+  if (tab==='eod') loadTodayMealsEOD();
+  if (tab==='history') renderHistory();
+}
+
+function selectChip(groupId, el, style) {
+  document.querySelectorAll(`#${groupId} .chip`).forEach(c => { c.className = 'chip'; });
+  el.className = `chip selected-${style}`;
+}
+
+function selectMealType(type) {
+  selectedMealType = type;
+  document.querySelectorAll('#mealTypeChips .chip').forEach(c => {
+    c.className = 'chip' + (c.textContent.includes(type) ? ' selected' : '');
+  });
+}
+
+function selectScale(groupId, el, val) {
+  if (groupId === 'arrivalRegScale') selectedArrivalReg = val;
+  if (groupId === 'eodRegScale') selectedEODReg = val;
+  if (groupId === 'eodEndRegScale') selectedEODEndReg = val;
+  document.querySelectorAll(`#${groupId} .scale-btn`).forEach((b,i) => {
+    b.className = 'scale-btn' + (i+1===val ? ` s${val}` : '');
+  });
+}
+
+function selectYN(groupId, el, val) {
+  if (groupId === 'poopYN') selectedPoop = val;
+  if (groupId === 'eodBehaviorYN') {
+    selectedEODBehavior = val;
+    document.getElementById('eodBehaviorDetails').style.display = val ? 'block' : 'none';
+  }
+  if (groupId === 'eodPoopYN') selectedEODPoop = val;
+  const btns = document.querySelectorAll(`#${groupId} .yn-btn`);
+  btns.forEach(b => b.className = 'yn-btn');
+  el.className = 'yn-btn ' + (val ? 'yes' : 'no');
+}
+
+function toggleSupp(groupId, el) { el.classList.toggle('selected'); }
+
+function getSupplements(groupId, otherId) {
+  const selected = [...document.querySelectorAll(`#${groupId} .chip.selected`)].map(c => c.textContent.trim());
+  const other = document.getElementById(otherId)?.value.trim();
+  if (other) selected.push(other);
+  return selected.join(', ');
+}
+
+function resetSupps(groupId, otherId) {
+  document.querySelectorAll(`#${groupId} .chip`).forEach(c => c.classList.remove('selected'));
+  const other = document.getElementById(otherId);
+  if (other) other.value = '';
+}
+
+function getSelectedChip(groupId) {
+  const el = document.querySelector(`#${groupId} .chip[class*="selected"]`);
+  return el ? el.textContent.replace(/^[^\w]*/, '').trim() : '';
+}
+
+function getTodayStr() { return new Date().toISOString().split('T')[0]; }
+
+function renderTodayMeals() {
+  const today = getTodayStr();
+  const todayMeals = meals.filter(m => m.date === today);
+  const container = document.getElementById('todayMealPills');
+  if (!todayMeals.length) {
+    container.innerHTML = '<span style="font-size:0.8rem;color:var(--muted);">Nothing logged yet today.</span>';
+    return;
+  }
+  container.innerHTML = todayMeals.map(m =>
+    `<span class="meal-pill">${m.type === 'Breakfast' ? '🌅' : m.type === 'Lunch' ? '☀️' : m.type === 'Dinner' ? '🌙' : '🍎'} ${m.type}: ${m.food.substring(0,30)}${m.food.length>30?'...':''}</span>`
+  ).join('');
+}
+
+function loadYesterdayMeals() {
+  const checkinDate = document.getElementById('checkinDate').value;
+  const d = new Date(checkinDate + 'T12:00:00');
+  d.setDate(d.getDate() - 1);
+  const yesterday = d.toISOString().split('T')[0];
+  const yesterdayMeals = meals.filter(m => m.date === yesterday);
+  const container = document.getElementById('yesterdayMealsList');
+  if (!yesterdayMeals.length) {
+    container.innerHTML = '<div style="font-size:0.82rem;color:var(--muted);padding:4px 0;">No meals logged for yesterday. You can add a summary in the field below.</div>';
+    return;
+  }
+  container.innerHTML = yesterdayMeals.map(m => `
+    <div class="meal-card">
+      <div class="meal-card-header"><span class="meal-type-label">${m.type}</span><span class="meal-time-badge">${m.time}</span></div>
+      <div style="font-size:0.85rem;color:var(--text);margin-bottom:6px;">${m.food}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${m.quality ? `<span style="font-size:0.72rem;background:var(--white);padding:2px 8px;border-radius:10px;border:1px solid var(--border);color:var(--muted);">${m.quality}</span>` : ''}
+        ${m.sugar ? `<span style="font-size:0.72rem;background:var(--white);padding:2px 8px;border-radius:10px;border:1px solid var(--border);color:var(--muted);">Sugar: ${m.sugar}</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function submitMeal() {
+  const food = document.getElementById('mealFood').value.trim();
+  const notes = document.getElementById('mealNotes').value.trim();
+  if (!selectedMealType) { showToast('Please select a meal type.', true); return; }
+  if (!food) { showToast('Please describe what he ate.', true); return; }
+  const now = new Date();
+  const meal = {
+    timestamp: now.toLocaleString(), date: getTodayStr(),
+    time: now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}),
+    type: selectedMealType, food,
+    quality: getSelectedChip('mealQualityChips'),
+    sugar: getSelectedChip('mealSugarChips'), notes
+  };
+  meals.push(meal);
+  localStorage.setItem('daak_meals', JSON.stringify(meals));
+  const row = [meal.timestamp, meal.date, meal.time, meal.type, meal.food, meal.quality, meal.sugar, meal.notes];
+  await sendToSheets(MEAL_SHEET, row, ['Timestamp','Date','Time','Meal Type','Food','How Well He Ate','Sugar Intake','Notes']);
+  showToast(`✓ ${selectedMealType} logged!`);
+  resetMealForm();
+  renderTodayMeals();
+}
+
+function resetMealForm() {
+  selectedMealType = '';
+  document.querySelectorAll('#mealTypeChips .chip').forEach(c => c.className = 'chip');
+  document.querySelectorAll('#mealQualityChips .chip').forEach(c => c.className = 'chip');
+  document.querySelectorAll('#mealSugarChips .chip').forEach(c => c.className = 'chip');
+  document.getElementById('mealFood').value = '';
+  document.getElementById('mealNotes').value = '';
+}
+
+async function submitCheckin() {
+  const checkinDate = document.getElementById('checkinDate').value;
+  const bedtime = document.getElementById('bedtime').value;
+  const waketime = document.getElementById('waketime').value;
+  const sleepNotes = document.getElementById('sleepNotes').value.trim();
+  const overallEating = document.getElementById('overallEating').value.trim();
+  const jawanaReport = document.getElementById('jawanaReport').value.trim();
+  if (!checkinDate) { showToast('Please select a date.', true); return; }
+  const d = new Date(checkinDate + 'T12:00:00');
+  d.setDate(d.getDate() - 1);
+  const yesterday = d.toISOString().split('T')[0];
+  const yesterdayMeals = meals.filter(m => m.date === yesterday);
+  const mealSummary = yesterdayMeals.map(m => `${m.type}: ${m.food} (${m.quality || '—'}, sugar: ${m.sugar || '—'})`).join(' | ');
+  let sleepHours = '';
+  if (bedtime && waketime) {
+    const [bh, bm] = bedtime.split(':').map(Number);
+    const [wh, wm] = waketime.split(':').map(Number);
+    let mins = (wh*60+wm) - (bh*60+bm);
+    if (mins < 0) mins += 24*60;
+    sleepHours = (mins/60).toFixed(1);
+  }
+  const checkin = {
+    timestamp: new Date().toLocaleString(), date: checkinDate, bedtime, waketime, sleepHours,
+    sleepQuality: getSelectedChip('sleepQualityChips'), sleepNotes,
+    poop: selectedPoop === null ? '' : selectedPoop ? 'Yes' : 'No',
+    discomfort: getSelectedChip('discomfortChips'),
+    supplements: getSupplements('suppChipsMorning', 'supplementsOtherMorning'),
+    wakeUpMood: getSelectedChip('wakeChips'), arrivalReg: selectedArrivalReg || '',
+    jawanaReport, mealSummaryYesterday: mealSummary || overallEating, overallEating
+  };
+  checkins.unshift(checkin);
+  localStorage.setItem('daak_checkins', JSON.stringify(checkins));
+  const row = [checkin.timestamp, checkin.date, checkin.bedtime, checkin.waketime, checkin.sleepHours, checkin.sleepQuality, checkin.sleepNotes, checkin.poop, checkin.discomfort, checkin.supplements, checkin.wakeUpMood, checkin.arrivalReg, checkin.jawanaReport, checkin.mealSummaryYesterday, checkin.overallEating];
+  await sendToSheets(CHECKIN_SHEET, row, ['Timestamp','Date','Bedtime','Wake Time','Sleep Hours','Sleep Quality','Sleep Notes','Pooped Yesterday','Physical Discomfort','Supplements Taken','Wake-up Mood (Jawana)','Arrival Reg Level','Jawana Notes','Meals Yesterday (auto)','Overall Eating Notes']);
+  showToast('✓ Morning check-in saved!');
+  resetCheckinForm();
+  renderHistory();
+}
+
+function resetCheckinForm() {
+  selectedPoop = null; selectedArrivalReg = null;
+  ['sleepQualityChips','discomfortChips','wakeChips'].forEach(id => {
+    document.querySelectorAll(`#${id} .chip`).forEach(c => c.className = 'chip');
+  });
+  document.querySelectorAll('#poopYN .yn-btn').forEach(b => b.className = 'yn-btn');
+  resetSupps('suppChipsMorning', 'supplementsOtherMorning');
+  document.querySelectorAll('#arrivalRegScale .scale-btn').forEach(b => b.className = 'scale-btn');
+  document.getElementById('bedtime').value = '';
+  document.getElementById('waketime').value = '';
+  document.getElementById('sleepNotes').value = '';
+  document.getElementById('overallEating').value = '';
+  document.getElementById('jawanaReport').value = '';
+  document.getElementById('checkinDate').value = getTodayStr();
+  loadYesterdayMeals();
+}
+
+function renderHistory() {
+  const eods = JSON.parse(localStorage.getItem('daak_eods') || '[]');
+  document.getElementById('statCheckins').textContent = checkins.length;
+  document.getElementById('statMeals').textContent = meals.length;
+  const regs = checkins.map(c => Number(c.arrivalReg)).filter(Boolean);
+  document.getElementById('statAvgReg').textContent = regs.length ? (regs.reduce((a,b)=>a+b,0)/regs.length).toFixed(1) : '—';
+  const list = document.getElementById('historyList');
+  if (!checkins.length && !meals.length && !eods.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>No entries yet.<br>Log a meal or check-in to get started.</p></div>';
+    return;
+  }
+  const regLabels = {1:'Calm',2:'Regulated',3:'Neutral',4:'Elevated',5:'Crisis'};
+  const allDates = [...new Set([...checkins.map(c=>c.date), ...eods.map(e=>e.date)])].sort().reverse();
+  list.innerHTML = allDates.slice(0,15).map(date => {
+    const c = checkins.find(x => x.date === date);
+    const e = eods.find(x => x.date === date);
+    const reg = c ? Number(c.arrivalReg) : null;
+    return `
+      <div class="history-entry">
+        <div class="history-date">${date}${reg ? `<span class="reg-badge reg-${reg}">${reg} — ${regLabels[reg]||''}</span>` : ''}</div>
+        ${c ? `
+          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--teal);margin-bottom:6px;">☀️ Morning</div>
+          ${c.sleepHours ? `<div class="history-section"><div class="history-label">Sleep</div><div class="history-value">🌙 ${c.sleepHours}h (${c.bedtime||'—'} → ${c.waketime||'—'}) · ${c.sleepQuality||'—'}</div></div>` : ''}
+          ${c.mealSummaryYesterday ? `<div class="history-section"><div class="history-label">Food Yesterday</div><div class="history-value">🍽 ${c.mealSummaryYesterday.substring(0,100)}${c.mealSummaryYesterday.length>100?'...':''}</div></div>` : ''}
+          <div class="history-section"><div class="history-label">Body</div><div class="history-value">💩 ${c.poop||'—'} · Discomfort: ${c.discomfort||'—'} · Supplements: ${c.supplements||'none noted'}</div></div>
+          ${c.wakeUpMood ? `<div class="history-section"><div class="history-label">Wake-up</div><div class="history-value">${c.wakeUpMood}</div></div>` : ''}
+          ${c.jawanaReport ? `<div class="history-section"><div class="history-label">Jawana's Notes</div><div class="history-value" style="font-style:italic;">"${c.jawanaReport}"</div></div>` : ''}
+        ` : ''}
+        ${c && e ? `<hr style="border:none;border-top:1px solid var(--border);margin:10px 0;">` : ''}
+        ${e ? `
+          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--lavender);margin-bottom:6px;">🌙 End of Day</div>
+          <div class="history-section"><div class="history-label">Day Rating</div><div class="history-value">${e.dayRating||'—'} · End reg: ${e.endReg ? `${e.endReg} — ${regLabels[e.endReg]||''}` : '—'}</div></div>
+          ${e.behaviorEpisodes === 'Yes' ? `<div class="history-section"><div class="history-label">Behaviors</div><div class="history-value" style="color:var(--coral);">⚠️ ${e.behaviorNotes||'Yes — see session log'}</div></div>` : ''}
+          <div class="history-section"><div class="history-label">Body</div><div class="history-value">💩 ${e.poop||'—'} · Supplements: ${e.supplements||'none noted'}</div></div>
+          ${e.eveningMood ? `<div class="history-section"><div class="history-label">Evening Mood</div><div class="history-value">${e.eveningMood}</div></div>` : ''}
+          ${e.notes ? `<div class="history-section"><div class="history-label">Notes for Tomorrow</div><div class="history-value" style="font-style:italic;">"${e.notes}"</div></div>` : ''}
+          ${e.win ? `<div class="history-section"><div class="history-label">🌟 Win</div><div class="history-value" style="color:var(--green);font-weight:600;">${e.win}</div></div>` : ''}
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function loadTodayMealsEOD() {
+  const eodDate = document.getElementById('eodDate').value || getTodayStr();
+  const todayMeals = meals.filter(m => m.date === eodDate);
+  const container = document.getElementById('eodMealsList');
+  if (!todayMeals.length) {
+    container.innerHTML = '<div style="font-size:0.82rem;color:var(--muted);padding:4px 0;">No meals logged yet today. Add notes below.</div>';
+    return;
+  }
+  container.innerHTML = todayMeals.map(m => `
+    <div class="meal-card">
+      <div class="meal-card-header"><span class="meal-type-label">${m.type}</span><span class="meal-time-badge">${m.time}</span></div>
+      <div style="font-size:0.85rem;color:var(--text);margin-bottom:6px;">${m.food}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${m.quality ? `<span style="font-size:0.72rem;background:var(--white);padding:2px 8px;border-radius:10px;border:1px solid var(--border);color:var(--muted);">${m.quality}</span>` : ''}
+        ${m.sugar ? `<span style="font-size:0.72rem;background:var(--white);padding:2px 8px;border-radius:10px;border:1px solid var(--border);color:var(--muted);">Sugar: ${m.sugar}</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function submitEOD() {
+  const eodDate = document.getElementById('eodDate').value;
+  if (!eodDate) { showToast('Please select a date.', true); return; }
+  const todayMeals = meals.filter(m => m.date === eodDate);
+  const mealSummary = todayMeals.map(m => `${m.type}: ${m.food} (${m.quality||'—'}, sugar: ${m.sugar||'—'})`).join(' | ');
+  const eod = {
+    timestamp: new Date().toLocaleString(), date: eodDate, overallReg: selectedEODReg || '',
+    dayRating: getSelectedChip('eodDayChips'),
+    behaviorEpisodes: selectedEODBehavior === null ? '' : selectedEODBehavior ? 'Yes' : 'No',
+    behaviorNotes: document.getElementById('eodBehaviorText').value.trim(),
+    poop: selectedEODPoop === null ? '' : selectedEODPoop ? 'Yes' : 'No',
+    discomfort: getSelectedChip('eodDiscomfortChips'),
+    supplements: getSupplements('suppChipsEOD', 'eodSupplementsOther'),
+    mealSummaryToday: mealSummary, overallEating: document.getElementById('eodOverallEating').value.trim(),
+    endReg: selectedEODEndReg || '', eveningMood: getSelectedChip('eodEveningMoodChips'),
+    notes: document.getElementById('eodNotes').value.trim(), win: document.getElementById('eodWin').value.trim()
+  };
+  let eods = JSON.parse(localStorage.getItem('daak_eods') || '[]');
+  eods.unshift(eod);
+  localStorage.setItem('daak_eods', JSON.stringify(eods));
+  const row = [eod.timestamp, eod.date, eod.overallReg, eod.dayRating, eod.behaviorEpisodes, eod.behaviorNotes, eod.poop, eod.discomfort, eod.supplements, eod.mealSummaryToday, eod.overallEating, eod.endReg, eod.eveningMood, eod.notes, eod.win];
+  await sendToSheets(EOD_SHEET, row, ['Timestamp','Date','Overall Reg Today','Day Rating','Behavior Episodes','Behavior Notes','Pooped Today','Physical Discomfort','Supplements Taken','Meals Today (auto)','Overall Eating Notes','Reg When Left','Evening Mood','Notes for Tomorrow','Win of the Day']);
+  showToast('✓ End of day logged!');
+  resetEODForm();
+  renderHistory();
+}
+
+function resetEODForm() {
+  selectedEODReg = null; selectedEODEndReg = null; selectedEODBehavior = null; selectedEODPoop = null;
+  ['eodRegScale','eodEndRegScale'].forEach(id => {
+    document.querySelectorAll(`#${id} .scale-btn`).forEach(b => b.className = 'scale-btn');
+  });
+  ['eodDayChips','eodDiscomfortChips','eodEveningMoodChips'].forEach(id => {
+    document.querySelectorAll(`#${id} .chip`).forEach(c => c.className = 'chip');
+  });
+  ['eodBehaviorYN','eodPoopYN'].forEach(id => {
+    document.querySelectorAll(`#${id} .yn-btn`).forEach(b => b.className = 'yn-btn');
+  });
+  resetSupps('suppChipsEOD', 'eodSupplementsOther');
+  document.getElementById('eodBehaviorText').value = '';
+  document.getElementById('eodOverallEating').value = '';
+  document.getElementById('eodNotes').value = '';
+  document.getElementById('eodWin').value = '';
+  document.getElementById('eodBehaviorDetails').style.display = 'none';
+  document.getElementById('eodDate').value = getTodayStr();
+  loadTodayMealsEOD();
+}
+
+async function sendToSheets(sheetName, row, headers) {
+  const url = document.getElementById('scriptUrl').value;
+  if (!url || url === 'YOUR_APPS_SCRIPT_URL_HERE') return;
+  try {
+    await fetch(url, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ sheetName, row, headers }) });
+  } catch(e) { console.log('Sheet sync error:', e); }
+}
+
+function downloadBackup() {
+  const eods = JSON.parse(localStorage.getItem('daak_eods') || '[]');
+  const backup = { meals, checkins, eods, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'daak-wellness-backup-' + getTodayStr() + '.json'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Backup downloaded!');
+}
+
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
