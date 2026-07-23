@@ -80,7 +80,7 @@ textarea { resize: vertical; min-height: 70px; }
 .empty-state { text-align: center; padding: 36px 20px; color: var(--muted); }
 .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
 .empty-state p { font-size: 0.88rem; line-height: 1.5; }
-.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--green); color: var(--white); padding: 12px 24px; border-radius: 24px; font-weight: 600; font-size: 0.88rem; transition: transform 0.3s ease; z-index: 999; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--green); color: var(--white); padding: 12px 24px; border-radius: 24px; font-weight: 600; font-size: 0.88rem; transition: transform 0.3s ease; z-index: 999; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.2); max-width: 90vw; text-align: center; white-space: normal; }
 .toast.show { transform: translateX(-50%) translateY(0); }
 .toast.error { background: var(--coral); }
 .info-box { background: var(--soft-yellow); border: 1px solid #E8C84A; border-radius: 9px; padding: 10px 14px; font-size: 0.8rem; color: #6B5200; margin-bottom: 14px; line-height: 1.5; }
@@ -148,7 +148,7 @@ textarea { resize: vertical; min-height: 70px; }
       </div>
     </div>
     <div class="field"><label>Notes <span>(optional)</span></label><input type="text" id="mealNotes" placeholder="Any extra details..."></div>
-    <button class="submit-btn meal-btn" onclick="submitMeal()">Save Meal Log</button>
+    <button class="submit-btn meal-btn" onclick="submitMeal()" id="mealSubmitBtn">Save Meal Log</button>
   </div>
 </div>
 
@@ -506,11 +506,45 @@ function loadYesterdayMeals() {
   `).join('');
 }
 
+async function getSheetCount(sheetName) {
+  const url = document.getElementById('scriptUrl').value;
+  if (!url || url === 'YOUR_APPS_SCRIPT_URL_HERE') return null;
+  try {
+    const res = await fetch(url + '?sheetName=' + encodeURIComponent(sheetName), { method: 'GET' });
+    const data = await res.json();
+    return typeof data.count === 'number' ? data.count : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function sendToSheets(sheetName, row, headers) {
+  const url = document.getElementById('scriptUrl').value;
+  if (!url || url === 'YOUR_APPS_SCRIPT_URL_HERE') return { synced: false, reason: 'no-url' };
+
+  const before = await getSheetCount(sheetName);
+
+  try {
+    await fetch(url, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ sheetName, row, headers }) });
+  } catch (e) {
+    return { synced: false, reason: 'network' };
+  }
+
+  await new Promise(res => setTimeout(res, 1800));
+  const after = await getSheetCount(sheetName);
+
+  if (before !== null && after !== null && after > before) return { synced: true };
+  return { synced: false, reason: 'unconfirmed' };
+}
+
 async function submitMeal() {
   const food = document.getElementById('mealFood').value.trim();
   const notes = document.getElementById('mealNotes').value.trim();
   if (!selectedMealType) { showToast('Please select a meal type.', true); return; }
   if (!food) { showToast('Please describe what he ate.', true); return; }
+  const btn = document.getElementById('mealSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
   const now = new Date();
   const meal = {
     timestamp: now.toLocaleString(), date: getTodayStr(),
@@ -522,10 +556,13 @@ async function submitMeal() {
   meals.push(meal);
   localStorage.setItem('daak_meals', JSON.stringify(meals));
   const row = [meal.timestamp, meal.date, meal.time, meal.type, meal.food, meal.quality, meal.sugar, meal.notes];
-  await sendToSheets(MEAL_SHEET, row, ['Timestamp','Date','Time','Meal Type','Food','How Well He Ate','Sugar Intake','Notes']);
-  showToast(`✓ ${selectedMealType} logged!`);
+  const result = await sendToSheets(MEAL_SHEET, row, ['Timestamp','Date','Time','Meal Type','Food','How Well He Ate','Sugar Intake','Notes']);
+  if (result.synced) showToast(`✓ ${selectedMealType} logged & synced to sheet!`);
+  else showToast(`⚠️ Saved on this phone, but sheet sync failed. Check connection / Sheet URL.`, true);
   resetMealForm();
   renderTodayMeals();
+  btn.disabled = false;
+  btn.textContent = 'Save Meal Log';
 }
 
 function resetMealForm() {
@@ -545,6 +582,9 @@ async function submitCheckin() {
   const overallEating = document.getElementById('overallEating').value.trim();
   const jawanaReport = document.getElementById('jawanaReport').value.trim();
   if (!checkinDate) { showToast('Please select a date.', true); return; }
+  const btn = document.getElementById('checkinSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
   const d = new Date(checkinDate + 'T12:00:00');
   d.setDate(d.getDate() - 1);
   const yesterday = d.toISOString().split('T')[0];
@@ -570,10 +610,13 @@ async function submitCheckin() {
   checkins.unshift(checkin);
   localStorage.setItem('daak_checkins', JSON.stringify(checkins));
   const row = [checkin.timestamp, checkin.date, checkin.bedtime, checkin.waketime, checkin.sleepHours, checkin.sleepQuality, checkin.sleepNotes, checkin.poop, checkin.discomfort, checkin.supplements, checkin.wakeUpMood, checkin.arrivalReg, checkin.jawanaReport, checkin.mealSummaryYesterday, checkin.overallEating];
-  await sendToSheets(CHECKIN_SHEET, row, ['Timestamp','Date','Bedtime','Wake Time','Sleep Hours','Sleep Quality','Sleep Notes','Pooped Yesterday','Physical Discomfort','Supplements Taken','Wake-up Mood (Jawana)','Arrival Reg Level','Jawana Notes','Meals Yesterday (auto)','Overall Eating Notes']);
-  showToast('✓ Morning check-in saved!');
+  const result = await sendToSheets(CHECKIN_SHEET, row, ['Timestamp','Date','Bedtime','Wake Time','Sleep Hours','Sleep Quality','Sleep Notes','Pooped Yesterday','Physical Discomfort','Supplements Taken','Wake-up Mood (Jawana)','Arrival Reg Level','Jawana Notes','Meals Yesterday (auto)','Overall Eating Notes']);
+  if (result.synced) showToast('✓ Morning check-in saved & synced!');
+  else showToast('⚠️ Saved on this phone, but sheet sync failed. Check connection / Sheet URL.', true);
   resetCheckinForm();
   renderHistory();
+  btn.disabled = false;
+  btn.textContent = 'Submit Morning Check-in';
 }
 
 function resetCheckinForm() {
@@ -659,6 +702,9 @@ function loadTodayMealsEOD() {
 async function submitEOD() {
   const eodDate = document.getElementById('eodDate').value;
   if (!eodDate) { showToast('Please select a date.', true); return; }
+  const btn = document.getElementById('eodSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
   const todayMeals = meals.filter(m => m.date === eodDate);
   const mealSummary = todayMeals.map(m => `${m.type}: ${m.food} (${m.quality||'—'}, sugar: ${m.sugar||'—'})`).join(' | ');
   const eod = {
@@ -677,10 +723,13 @@ async function submitEOD() {
   eods.unshift(eod);
   localStorage.setItem('daak_eods', JSON.stringify(eods));
   const row = [eod.timestamp, eod.date, eod.overallReg, eod.dayRating, eod.behaviorEpisodes, eod.behaviorNotes, eod.poop, eod.discomfort, eod.supplements, eod.mealSummaryToday, eod.overallEating, eod.endReg, eod.eveningMood, eod.notes, eod.win];
-  await sendToSheets(EOD_SHEET, row, ['Timestamp','Date','Overall Reg Today','Day Rating','Behavior Episodes','Behavior Notes','Pooped Today','Physical Discomfort','Supplements Taken','Meals Today (auto)','Overall Eating Notes','Reg When Left','Evening Mood','Notes for Tomorrow','Win of the Day']);
-  showToast('✓ End of day logged!');
+  const result = await sendToSheets(EOD_SHEET, row, ['Timestamp','Date','Overall Reg Today','Day Rating','Behavior Episodes','Behavior Notes','Pooped Today','Physical Discomfort','Supplements Taken','Meals Today (auto)','Overall Eating Notes','Reg When Left','Evening Mood','Notes for Tomorrow','Win of the Day']);
+  if (result.synced) showToast('✓ End of day logged & synced!');
+  else showToast('⚠️ Saved on this phone, but sheet sync failed. Check connection / Sheet URL.', true);
   resetEODForm();
   renderHistory();
+  btn.disabled = false;
+  btn.textContent = 'Submit End of Day Check-in';
 }
 
 function resetEODForm() {
@@ -704,14 +753,6 @@ function resetEODForm() {
   loadTodayMealsEOD();
 }
 
-async function sendToSheets(sheetName, row, headers) {
-  const url = document.getElementById('scriptUrl').value;
-  if (!url || url === 'YOUR_APPS_SCRIPT_URL_HERE') return;
-  try {
-    await fetch(url, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ sheetName, row, headers }) });
-  } catch(e) { console.log('Sheet sync error:', e); }
-}
-
 function downloadBackup() {
   const eods = JSON.parse(localStorage.getItem('daak_eods') || '[]');
   const backup = { meals, checkins, eods, exportedAt: new Date().toISOString() };
@@ -728,7 +769,7 @@ function showToast(msg, isError=false) {
   t.textContent = msg;
   t.className = 'toast' + (isError ? ' error' : '');
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  setTimeout(() => t.classList.remove('show'), 4500);
 }
 </script>
 </body>
